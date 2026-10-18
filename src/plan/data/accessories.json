@@ -1,0 +1,117 @@
+{
+ "One-arm Cable Lateral Raise": [
+  "One-arm Cable Lateral Raise",
+  "Lean-away Dumbbell Lateral Raise",
+  "Machine Lateral Raise"
+ ],
+ "Lying EZ-Bar Triceps Extension": [
+  "Lying EZ-Bar Triceps Extension",
+  "Dumbbell Skull Crusher",
+  "Cable Triceps Pushdown"
+ ],
+ "Cable Overhead Triceps Extension": [
+  "Cable Overhead Triceps Extension",
+  "Dumbbell Overhead Triceps Extension",
+  "Rope Pushdown"
+ ],
+ "Triceps Extension": [
+  "Triceps Extension",
+  "Rope Pushdown",
+  "Single-arm Cable Pushdown"
+ ],
+ "Chest Supported Dumbbell Row": [
+  "Chest Supported Dumbbell Row",
+  "Chest-supported T-bar Row",
+  "Seal Row"
+ ],
+ "Face Pull": [
+  "Face Pull",
+  "Reverse Cable Fly",
+  "Band Pull-apart"
+ ],
+ "Standing EZ-Bar Biceps Curl": [
+  "Standing EZ-Bar Biceps Curl",
+  "Dumbbell Curl",
+  "Cable Curl"
+ ],
+ "Dumbbell Hammer Curl": [
+  "Dumbbell Hammer Curl",
+  "Cross-body Hammer Curl",
+  "Rope Hammer Curl"
+ ],
+ "Incline Dumbbell Biceps Curl": [
+  "Incline Dumbbell Biceps Curl",
+  "Bayesian Cable Curl",
+  "Spider Curl"
+ ],
+ "Reverse EZ-Bar Curl": [
+  "Reverse EZ-Bar Curl",
+  "Zottman Curl",
+  "Reverse Cable Curl"
+ ],
+ "Pallof Press": [
+  "Pallof Press",
+  "Half-kneeling Cable Lift",
+  "Landmine Anti-rotation"
+ ],
+ "Kneeling Ab Wheel": [
+  "Kneeling Ab Wheel",
+  "Body Saw",
+  "Weighted Dead Bug"
+ ],
+ "Hanging Leg Raise": [
+  "Hanging Leg Raise",
+  "Captain's Chair Knee Raise",
+  "Reverse Crunch"
+ ],
+ "Weighted Leg Curl": [
+  "Weighted Leg Curl",
+  "Seated Leg Curl",
+  "Assisted Nordic Curl"
+ ],
+ "Seated Leg Curl": [
+  "Seated Leg Curl",
+  "Lying Leg Curl",
+  "Assisted Nordic Curl"
+ ],
+ "Incline Reverse Fly": [
+  "Incline Reverse Fly",
+  "Rear Delt Cable Fly",
+  "Machine Reverse Fly"
+ ],
+ "Dumbbell Shrug": [
+  "Dumbbell Shrug",
+  "Trap-bar Shrug",
+  "Cable Shrug"
+ ],
+ "Cable Y-Raise": [
+  "Cable Y-Raise",
+  "Prone Incline Y-Raise",
+  "Lying Y-Raise"
+ ],
+ "Wrist Curl + Reverse Wrist Curl": [
+  "Wrist Curl + Reverse Wrist Curl",
+  "Plate Pinch Hold",
+  "Wrist Roller"
+ ],
+ "Single-arm Neutral-grip Dumbbell Row": [
+  "Single-arm Neutral-grip Dumbbell Row",
+  "Single-arm Cable Row",
+  "Meadows Row"
+ ],
+ "Wide-grip Lat Pull-down": [
+  "Wide-grip Lat Pull-down",
+  "Single-arm Lat Pull-down",
+  "Paused Assisted Pull-up"
+ ],
+ "Incline Dumbbell Bench Press": [
+  "Incline Dumbbell Bench Press",
+  "Low-incline Smith Press",
+  "Machine Incline Press"
+ ],
+ "Suitcase Carry": [
+  "Suitcase Carry",
+  "Single-arm Overhead Carry",
+  "Front-rack Kettlebell Carry"
+ ]
+}

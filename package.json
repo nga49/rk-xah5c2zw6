@@ -1,0 +1,41 @@
+{
+  "name": "ragnarok",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "scan": "node scripts/privacy-scan.mjs dist",
+    "e2e": "playwright test",
+    "icons": "node scripts/make-icons.mjs",
+    "check": "npm run test && npm run build && npm run scan"
+  },
+  "dependencies": {
+    "@fontsource/cinzel": "5.2.8",
+    "@fontsource/hanken-grotesk": "5.2.8",
+    "@fontsource/noto-sans-runic": "5.2.6",
+    "dexie": "4.0.11",
+    "dexie-react-hooks": "1.1.7",
+    "lucide-react": "0.546.0",
+    "react": "19.1.9",
+    "react-dom": "19.1.9"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@testing-library/dom": "10.4.1",
+    "@testing-library/react": "16.3.0",
+    "@types/node": "22.20.5",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
+    "@vitejs/plugin-react": "5.0.4",
+    "fake-indexeddb": "6.0.1",
+    "jsdom": "26.1.0",
+    "typescript": "5.9.3",
+    "vite": "7.1.12",
+    "vitest": "3.2.7"
+  }
+}

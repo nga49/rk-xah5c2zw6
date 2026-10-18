@@ -1,0 +1,762 @@
+{
+ "strength": [
+  {
+   "weekday": "Monday",
+   "code": "BLADES",
+   "kind": "Push A · heavy",
+   "focus": "Shoulders lead, chest follows",
+   "exercises": [
+    {
+     "name": "Barbell Overhead Press",
+     "sets": 5,
+     "reps": 4,
+     "rest_s": 120,
+     "muscles": [
+      "Front delts"
+     ],
+     "load_note": "82%",
+     "note": "Now first. Was 4 x 5 at 85%"
+    },
+    {
+     "name": "Barbell Bench Press",
+     "sets": 5,
+     "reps": 3,
+     "rest_s": 150,
+     "muscles": [
+      "Chest"
+     ],
+     "load_note": "85%",
+     "note": "Was 5 x 5 at 87%, rest 2:00"
+    },
+    {
+     "name": "Weighted Dip",
+     "sets": 3,
+     "reps": 8,
+     "rest_s": 90,
+     "muscles": [
+      "Chest"
+     ],
+     "note": "Was 4 sets, rest 1:00"
+    },
+    {
+     "name": "One-arm Cable Lateral Raise",
+     "sets": 4,
+     "reps": 15,
+     "rest_s": 45,
+     "muscles": [
+      "Side delts"
+     ],
+     "per_side": true
+    },
+    {
+     "name": "Lying EZ-Bar Triceps Extension",
+     "sets": 3,
+     "reps": 10,
+     "rest_s": 60,
+     "muscles": [
+      "Triceps"
+     ]
+    },
+    {
+     "name": "Cable Overhead Triceps Extension",
+     "sets": 3,
+     "reps": 15,
+     "rest_s": 45,
+     "muscles": [
+      "Triceps"
+     ]
+    },
+    {
+     "name": "Push-up",
+     "sets": 1,
+     "reps": 100,
+     "rest_s": 0,
+     "muscles": [],
+     "finisher": true,
+     "rest_note": "short breaks"
+    }
+   ]
+  },
+  {
+   "weekday": "Tuesday",
+   "code": "LEVIATHAN",
+   "kind": "Pull A · heavy",
+   "focus": "Upper back and traps",
+   "exercises": [
+    {
+     "name": "Weighted Pull-up",
+     "sets": 4,
+     "reps": 5,
+     "rest_s": 150,
+     "muscles": [
+      "Back"
+     ],
+     "note": "Was 5 sets, rest 2:00"
+    },
+    {
+     "name": "Chest Supported Dumbbell Row",
+     "sets": 4,
+     "reps": 8,
+     "rest_s": 90,
+     "muscles": [
+      "Back"
+     ]
+    },
+    {
+     "name": "Barbell Shrug",
+     "sets": 4,
+     "reps": 10,
+     "rest_s": 60,
+     "muscles": [
+      "Traps"
+     ],
+     "load_note": "75%",
+     "note": "2 s hold at the top. Was 3 x 12 at 70%"
+    },
+    {
+     "name": "Face Pull",
+     "sets": 3,
+     "reps": 20,
+     "rest_s": 45,
+     "muscles": [
+      "Rear delts"
+     ]
+    },
+    {
+     "name": "Standing EZ-Bar Biceps Curl",
+     "sets": 3,
+     "reps": 10,
+     "rest_s": 60,
+     "muscles": [
+      "Biceps"
+     ],
+     "note": "Was 4 sets"
+    },
+    {
+     "name": "Dumbbell Hammer Curl",
+     "sets": 3,
+     "reps": 12,
+     "rest_s": 45,
+     "muscles": [
+      "Biceps",
+      "Forearms"
+     ]
+    },
+    {
+     "name": "Inverted Row",
+     "sets": 1,
+     "reps": 100,
+     "rest_s": 0,
+     "muscles": [],
+     "finisher": true,
+     "rest_note": "short breaks"
+    }
+   ]
+  },
+  {
+   "weekday": "Wednesday",
+   "code": "GUARDIAN",
+   "kind": "Carry + core",
+   "focus": "Grip, trunk, neck",
+   "exercises": [
+    {
+     "name": "Farmer's Carry",
+     "sets": 4,
+     "reps": null,
+     "rest_s": 60,
+     "muscles": [
+      "Traps",
+      "Core",
+      "Forearms"
+     ],
+     "work_s": 40,
+     "load_note": "30 to 40 m, heavy",
+     "note": "Now first"
+    },
+    {
+     "name": "Suitcase Carry",
+     "sets": 3,
+     "reps": null,
+     "rest_s": 45,
+     "muscles": [
+      "Core",
+      "Forearms"
+     ],
+     "work_s": 50,
+     "load_note": "20 m each side"
+    },
+    {
+     "name": "Pallof Press",
+     "sets": 3,
+     "reps": 12,
+     "rest_s": 45,
+     "muscles": [
+      "Core"
+     ],
+     "note": "Replaces Cable Woodchop",
+     "per_side": true
+    },
+    {
+     "name": "Kneeling Ab Wheel",
+     "sets": 3,
+     "reps": 10,
+     "rest_s": 60,
+     "muscles": [
+      "Core"
+     ]
+    },
+    {
+     "name": "Side Plank with Reach Under",
+     "sets": 3,
+     "reps": 12,
+     "rest_s": 60,
+     "muscles": [
+      "Core"
+     ],
+     "per_side": true
+    },
+    {
+     "name": "Wrist Curl + Reverse Wrist Curl",
+     "sets": 3,
+     "reps": 15,
+     "rest_s": 45,
+     "muscles": [
+      "Forearms",
+      "Forearms"
+     ],
+     "note": "Superset, 15 each"
+    },
+    {
+     "name": "Neck Flexion + Extension",
+     "sets": 2,
+     "reps": 15,
+     "rest_s": 30,
+     "muscles": [
+      "Neck",
+      "Neck"
+     ],
+     "load_note": "light",
+     "note": "Slow, 15 each way"
+    }
+   ]
+  },
+  {
+   "weekday": "Thursday",
+   "code": "SPARTAN",
+   "kind": "Legs A · heavy",
+   "focus": "Strong legs, quiet spine",
+   "exercises": [
+    {
+     "name": "Barbell Back Squat",
+     "sets": 4,
+     "reps": 4,
+     "rest_s": 150,
+     "muscles": [
+      "Quads"
+     ],
+     "load_note": "80%",
+     "note": "Was 5 x 5 at 85%, rest 2:00"
+    },
+    {
+     "name": "Barbell Hip Thrust with Bench",
+     "sets": 4,
+     "reps": 10,
+     "rest_s": 90,
+     "muscles": [
+      "Glutes"
+     ],
+     "load_note": "75%"
+    },
+    {
+     "name": "Dumbbell Bulgarian Split Squat",
+     "sets": 3,
+     "reps": 10,
+     "rest_s": 90,
+     "muscles": [
+      "Quads",
+      "Glutes"
+     ],
+     "per_side": true
+    },
+    {
+     "name": "45° Back Extension",
+     "sets": 3,
+     "reps": 12,
+     "rest_s": 60,
+     "muscles": [
+      "Hamstrings",
+      "Glutes"
+     ],
+     "note": "Hinge at the hips. Replaces Romanian Deadlift"
+    },
+    {
+     "name": "Weighted Leg Curl",
+     "sets": 4,
+     "reps": 12,
+     "rest_s": 60,
+     "muscles": [
+      "Hamstrings"
+     ]
+    },
+    {
+     "name": "Weighted Standing Calf Raise",
+     "sets": 5,
+     "reps": 12,
+     "rest_s": 20,
+     "muscles": [
+      "Calves"
+     ],
+     "note": "Was 4 sets"
+    },
+    {
+     "name": "Sled Push",
+     "sets": 4,
+     "reps": null,
+     "rest_s": 60,
+     "muscles": [
+      "Quads"
+     ],
+     "work_s": 25,
+     "load_note": "20 m, heavy, steady walk",
+     "note": "Finisher. Backward sled pull works too"
+    }
+   ]
+  },
+  {
+   "weekday": "Friday",
+   "code": "DRAUPNIR",
+   "kind": "Push B · volume",
+   "focus": "Shoulder width and yoke",
+   "exercises": [
+    {
+     "name": "Arnold Press",
+     "sets": 4,
+     "reps": 10,
+     "rest_s": 75,
+     "muscles": [
+      "Front delts"
+     ],
+     "note": "Now first"
+    },
+    {
+     "name": "Incline Dumbbell Bench Press",
+     "sets": 4,
+     "reps": 10,
+     "rest_s": 75,
+     "muscles": [
+      "Chest",
+      "Front delts"
+     ]
+    },
+    {
+     "name": "One-arm Cable Lateral Raise",
+     "sets": 4,
+     "reps": 15,
+     "rest_s": 45,
+     "muscles": [
+      "Side delts"
+     ],
+     "per_side": true
+    },
+    {
+     "name": "Incline Reverse Fly",
+     "sets": 4,
+     "reps": 15,
+     "rest_s": 45,
+     "muscles": [
+      "Rear delts"
+     ],
+     "note": "Was 3 sets"
+    },
+    {
+     "name": "Dumbbell Shrug",
+     "sets": 4,
+     "reps": 12,
+     "rest_s": 60,
+     "muscles": [
+      "Traps"
+     ],
+     "note": "2 s hold at the top"
+    },
+    {
+     "name": "Triceps Extension",
+     "sets": 4,
+     "reps": 15,
+     "rest_s": 45,
+     "muscles": [
+      "Triceps"
+     ]
+    },
+    {
+     "name": "Hanging Leg Raise",
+     "sets": 3,
+     "reps": 10,
+     "rest_s": 60,
+     "muscles": [
+      "Core"
+     ]
+    },
+    {
+     "name": "Neck Flexion + Extension",
+     "sets": 2,
+     "reps": 15,
+     "rest_s": 30,
+     "muscles": [
+      "Neck",
+      "Neck"
+     ],
+     "load_note": "light",
+     "note": "Slow, 15 each way"
+    },
+    {
+     "name": "Dumbbell Lateral Raise",
+     "sets": 3,
+     "reps": 21,
+     "rest_s": 30,
+     "muscles": [
+      "Side delts"
+     ],
+     "finisher": true
+    }
+   ]
+  },
+  {
+   "weekday": "Saturday",
+   "code": "VALHALLA",
+   "kind": "Pull + legs B",
+   "focus": "Volume, then the gauntlet",
+   "exercises": [
+    {
+     "name": "Leg Press",
+     "sets": 4,
+     "reps": 15,
+     "rest_s": 75,
+     "muscles": [
+      "Quads"
+     ],
+     "note": "Rest was 1:00"
+    },
+    {
+     "name": "Weighted Leg Curl",
+     "sets": 3,
+     "reps": 15,
+     "rest_s": 45,
+     "muscles": [
+      "Hamstrings"
+     ]
+    },
+    {
+     "name": "Barbell Hip Thrust with Bench",
+     "sets": 3,
+     "reps": 15,
+     "rest_s": 60,
+     "muscles": [
+      "Glutes"
+     ],
+     "load_note": "55%"
+    },
+    {
+     "name": "Weighted Seated Calf Raise",
+     "sets": 5,
+     "reps": 20,
+     "rest_s": 30,
+     "muscles": [
+      "Calves"
+     ],
+     "note": "Was 4 sets"
+    },
+    {
+     "name": "Wide-grip Lat Pull-down",
+     "sets": 3,
+     "reps": 12,
+     "rest_s": 75,
+     "muscles": [
+      "Back"
+     ],
+     "note": "Was 4 sets, rest 1:00"
+    },
+    {
+     "name": "Single-arm Neutral-grip Dumbbell Row",
+     "sets": 3,
+     "reps": 12,
+     "rest_s": 60,
+     "muscles": [
+      "Back"
+     ],
+     "per_side": true
+    },
+    {
+     "name": "Cable Y-Raise",
+     "sets": 3,
+     "reps": 15,
+     "rest_s": 45,
+     "muscles": [
+      "Rear delts"
+     ],
+     "note": "Replaces Straight-arm Pull-down"
+    },
+    {
+     "name": "Incline Dumbbell Biceps Curl",
+     "sets": 3,
+     "reps": 12,
+     "rest_s": 60,
+     "muscles": [
+      "Biceps"
+     ]
+    },
+    {
+     "name": "Reverse EZ-Bar Curl",
+     "sets": 3,
+     "reps": 12,
+     "rest_s": 45,
+     "muscles": [
+      "Biceps",
+      "Forearms"
+     ],
+     "note": "Replaces Cable Biceps Curl"
+    },
+    {
+     "name": "Thruster, Renegade Row, Lateral Raise, Goblet Squat",
+     "sets": 3,
+     "reps": null,
+     "rest_s": 60,
+     "muscles": [
+      "Side delts"
+     ],
+     "work_s": 150,
+     "load_note": "10 · 16 · 12 · 15",
+     "note": "Circuit, unchanged",
+     "finisher": true,
+     "rest_note": "1:00 per round"
+    }
+   ]
+  }
+ ],
+ "volume_overrides": [
+  {
+   "weekday": "Monday",
+   "code": "BLADES",
+   "kind": "Push A · volume",
+   "focus": "Shoulders and chest, 8 to 15 reps",
+   "exercises": [
+    {
+     "name": "Seated Dumbbell Shoulder Press",
+     "sets": 4,
+     "reps": "8–10",
+     "rest_s": 120,
+     "muscles": [
+      "Front delts"
+     ],
+     "note": "Back supported"
+    },
+    {
+     "name": "Incline Barbell Bench Press",
+     "sets": 3,
+     "reps": "8–10",
+     "rest_s": 120,
+     "muscles": [
+      "Chest",
+      "Front delts"
+     ]
+    },
+    {
+     "name": "Weighted Dip",
+     "sets": 3,
+     "reps": "10–12",
+     "rest_s": 90,
+     "muscles": [
+      "Chest"
+     ]
+    },
+    {
+     "name": "One-arm Cable Lateral Raise",
+     "sets": 4,
+     "reps": "12–15",
+     "rest_s": 45,
+     "muscles": [
+      "Side delts"
+     ],
+     "per_side": true
+    },
+    {
+     "name": "Lying EZ-Bar Triceps Extension",
+     "sets": 3,
+     "reps": "10–12",
+     "rest_s": 60,
+     "muscles": [
+      "Triceps"
+     ]
+    },
+    {
+     "name": "Cable Overhead Triceps Extension",
+     "sets": 3,
+     "reps": "12–15",
+     "rest_s": 45,
+     "muscles": [
+      "Triceps"
+     ]
+    },
+    {
+     "name": "Push-up",
+     "sets": 1,
+     "reps": 100,
+     "rest_s": 0,
+     "muscles": [],
+     "finisher": true,
+     "rest_note": "short breaks"
+    }
+   ]
+  },
+  {
+   "weekday": "Tuesday",
+   "code": "LEVIATHAN",
+   "kind": "Pull A · volume",
+   "focus": "Width and yoke, 8 to 20 reps",
+   "exercises": [
+    {
+     "name": "Neutral-grip Lat Pull-down",
+     "sets": 4,
+     "reps": "8–10",
+     "rest_s": 120,
+     "muscles": [
+      "Back"
+     ]
+    },
+    {
+     "name": "Chest Supported Dumbbell Row",
+     "sets": 4,
+     "reps": "10–12",
+     "rest_s": 90,
+     "muscles": [
+      "Back"
+     ]
+    },
+    {
+     "name": "Barbell Shrug",
+     "sets": 4,
+     "reps": "12–15",
+     "rest_s": 60,
+     "muscles": [
+      "Traps"
+     ],
+     "note": "2 s hold at the top"
+    },
+    {
+     "name": "Face Pull",
+     "sets": 3,
+     "reps": "15–20",
+     "rest_s": 45,
+     "muscles": [
+      "Rear delts"
+     ]
+    },
+    {
+     "name": "Standing EZ-Bar Biceps Curl",
+     "sets": 3,
+     "reps": "10–12",
+     "rest_s": 60,
+     "muscles": [
+      "Biceps"
+     ]
+    },
+    {
+     "name": "Dumbbell Hammer Curl",
+     "sets": 3,
+     "reps": "12–15",
+     "rest_s": 45,
+     "muscles": [
+      "Biceps",
+      "Forearms"
+     ]
+    },
+    {
+     "name": "Inverted Row",
+     "sets": 1,
+     "reps": 100,
+     "rest_s": 0,
+     "muscles": [],
+     "finisher": true,
+     "rest_note": "short breaks"
+    }
+   ]
+  },
+  {
+   "weekday": "Thursday",
+   "code": "SPARTAN",
+   "kind": "Legs A · volume",
+   "focus": "Leg size with the spine unloaded",
+   "exercises": [
+    {
+     "name": "Hack Squat",
+     "sets": 4,
+     "reps": "8–10",
+     "rest_s": 120,
+     "muscles": [
+      "Quads"
+     ],
+     "note": "Machine, back supported. Leg press if none"
+    },
+    {
+     "name": "Barbell Hip Thrust with Bench",
+     "sets": 4,
+     "reps": "10–12",
+     "rest_s": 90,
+     "muscles": [
+      "Glutes"
+     ]
+    },
+    {
+     "name": "Dumbbell Bulgarian Split Squat",
+     "sets": 3,
+     "reps": "10–12",
+     "rest_s": 90,
+     "muscles": [
+      "Quads",
+      "Glutes"
+     ],
+     "per_side": true
+    },
+    {
+     "name": "45° Back Extension",
+     "sets": 3,
+     "reps": "12–15",
+     "rest_s": 60,
+     "muscles": [
+      "Hamstrings",
+      "Glutes"
+     ]
+    },
+    {
+     "name": "Seated Leg Curl",
+     "sets": 4,
+     "reps": "10–12",
+     "rest_s": 60,
+     "muscles": [
+      "Hamstrings"
+     ]
+    },
+    {
+     "name": "Weighted Standing Calf Raise",
+     "sets": 5,
+     "reps": "10–12",
+     "rest_s": 30,
+     "muscles": [
+      "Calves"
+     ]
+    },
+    {
+     "name": "Sled Push",
+     "sets": 4,
+     "reps": null,
+     "rest_s": 60,
+     "muscles": [
+      "Quads"
+     ],
+     "work_s": 25,
+     "load_note": "20 m, heavy, steady walk",
+     "finisher": true
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+test-results/
+playwright-report/
+# Local-only fixtures with real numbers. Never commit.
+tests/private.local.json
+e2e/private.local.json
+*.local.*
