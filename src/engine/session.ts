@@ -312,16 +312,12 @@ function mainLoad(d: Draft, pos: Position, mods: Mods, data: Data): LoadSuggesti
     badgeReason = 'Last session was hard: hold';
     why.push(badgeReason + '.');
   }
-  if (mods.intensity === 'moderate') {
-    kg = roundDown(kg * 0.9);
-    why.push('90%: Moderate day.');
-  } else if (mods.intensity === 'light') {
-    kg = roundDown(kg * 0.75);
-    why.push('75%: Light day.');
-  }
-  if (d.loadFactor) {
-    kg = roundDown(kg * d.loadFactor);
-    why.push(`${Math.round(d.loadFactor * 100)}% for the back.`);
+  // Day type and back rules are both fractions of the usual load: the stricter one applies, once.
+  const dayFactor = mods.intensity === 'moderate' ? 0.9 : mods.intensity === 'light' ? 0.75 : 1;
+  const factor = Math.min(dayFactor, d.loadFactor ?? 1);
+  if (factor < 1) {
+    kg = roundDown(kg * factor);
+    why.push(d.loadFactor && d.loadFactor <= dayFactor ? `${Math.round(factor * 100)}% of usual: back rule.` : `${Math.round(factor * 100)}%: ${mods.intensity === 'light' ? 'Light' : 'Moderate'} day.`);
   }
   let badgeText: string | undefined;
   if (!badge && remembered && kg > remembered.kg && mods.intensity === 'full' && !d.loadFactor) {

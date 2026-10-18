@@ -1,5 +1,37 @@
 # Changelog
 
+## M8: Ask Claude, polish, accessibility, README
+
+- Ask Claude: quick prompts or free text, a compact plain-text context pack (safety line first, profile from the phone), copied to the clipboard, then claude.ai opens. Nothing is sent by the app.
+- Accessibility: labels on every control, icon plus word for every session type, 44 px tap targets, reduced motion, no horizontal scroll (checked by a browser test on each screen).
+- A label wrapping button groups named only the first button; fixed with a group field.
+- Light days with back pain apply the stricter of the two load rules once (60% of usual), not both.
+- README: deploy, private repository and token, iPhone install, restore.
+- Browser tests on an iPhone-sized viewport: setup, Full / Light / Recovery check-ins, set and weight logging with clean or hard, finishing with feedback, Ask Claude clipboard, offline start, robots and manifest.
+
+## M7: storage, backup, export, PIN
+
+- IndexedDB through Dexie; every record has `updatedAt`; deletes are soft so restores never bring them back.
+- Automatic backup to `backup/latest.json` (2 minutes after a change, on open after 12 hours, on close with pending changes), monthly copy, restore with per-record merge, export and import JSON.
+- A change during an upload now gets its own upload right after (found by the backup test).
+- Optional 4-digit PIN, PBKDF2-hashed, asked on open and after 5 minutes away.
+- Tests: acceptance 16 (mocked GitHub API) and 17 (build scan, also run in the deploy workflow).
+
+## M6: Log and Stats
+
+- Log: activity (several cardio entries a day), sleep for any past day, rep max with "Due" highlighting, body with photos, standards; every history list edits and deletes.
+- Stats: road progress, weight 7-day average against the plan line with phase bands, body fat and lean mass with FFMI, e1RM per lift, working weight per exercise, records, standards, check-in heatmap, habits by season, sleep, activity, readiness against the session served, trophies.
+
+## M5: Mind
+
+- Season card with the "When X, I do Y" line, every active habit with this week's dots, the road, the practice ladder, the reference cards.
+- Sunday review with the week's stats, the engine's suggestion and "Copy my week for Claude"; season scores with the under-6 flag.
+
+## M4: Today and Train
+
+- Today: position line, check-in with the badge and one-line reason, tasks with inline inputs (steps ring, weigh-in, waist, cardio, mobility, daily code), eat today, up to 3 insight cards, 14-day streak.
+- Train: session-type badge with "Use the full session anyway", block card, the session with pre-filled weights, up / hold / down badges with reasons, set dots that start the rest timer, clean or hard, finish with RPE and main-lift feel, cardio and mobility with a log button, travel mode, pause plan, the week, the next block.
+
 ## M3: readiness and the intelligence layer
 
 - Readiness score with every deduction from 5.3, personal 28-day baselines after 14 days, and a bounded calibration (plus or minus 5, one point a week, after 8 weeks, resettable).

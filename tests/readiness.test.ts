@@ -406,3 +406,15 @@ describe('scheduling rules', () => {
     expect(day('2026-10-18', data).decision.type).toBe('Rest');
   });
 });
+
+describe('load rules do not stack', () => {
+  it('Light day with back pain: hip thrust at 60% of usual, not 75% of 60%', () => {
+    const data = makeData();
+    const date = '2026-10-29'; // M1 week 2 Thursday: hip thrust 74%
+    const pos = getPosition(date, data.plan);
+    const usual = buildSession({ date, code: 'SPARTAN', pos, mods: modsForType('Full'), data }).exercises.find((e) => e.lift === 'hipthrust')?.load?.kg as number;
+    const light = buildSession({ date, code: 'SPARTAN', pos, mods: modsForType('Light'), data }).exercises.find((e) => e.lift === 'hipthrust')?.load?.kg;
+    expect(usual).toBe(roundDown(160 * 0.74));
+    expect(light).toBe(roundDown(usual * 0.6));
+  });
+});
