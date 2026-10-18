@@ -1,5 +1,10 @@
 # Changelog
 
+## Emblem: rustic Omega
+
+- At the owner's request the emblem is now a rustic Omega: chiseled, forged ember-red iron with hammered facets, an embossed bevel, dents, grain and cracks glowing like hot iron, on dark stone with an ember glow. It replaces the axe and blades.
+- An original drawing of the Greek letter, not a copy of any game logo. Header mark, favicon and the 180, 192 and 512 px icons regenerated with `npm run icons`.
+
 ## M8: Ask Claude, polish, accessibility, README
 
 - Ask Claude: quick prompts or free text, a compact plain-text context pack (safety line first, profile from the phone), copied to the clipboard, then claude.ai opens. Nothing is sent by the app.
