@@ -29,7 +29,7 @@ export function Ask({ data, view, initial, onClose }: ScreenProps & { initial?: 
         </button>
         {copied && (
           <a className="btn block" href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">
-            Open Claude again <ExternalLink size={14} />
+            Claude did not open? Open Claude <ExternalLink size={14} />
           </a>
         )}
         <Card>
