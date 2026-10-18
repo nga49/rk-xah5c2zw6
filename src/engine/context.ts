@@ -1,12 +1,13 @@
 import { LIFTS, STAT_LIFTS, TPL_LABEL, PHASE_LABEL } from '../plan';
 import { ASK_INSTRUCTION } from '../plan/content';
 import { addDays, formatLong, formatSleep, startOfWeek } from './dates';
-import { fmtInt, fmtKg, mean, round1, weeklyAverage } from './formulas';
+import { fmtInt, mean, weeklyAverage } from './formulas';
 import { habitRate } from './insights';
 import { e1rmFor } from './loads';
 import type { Data } from './model';
 import { live } from './model';
 import type { DayView } from './today';
+import { unitsOf } from './units';
 
 const doseOf = (e: { sets: number; reps: number | string | null; work_s?: number; perSide?: boolean }) =>
   e.reps != null ? `${e.sets} × ${e.reps}${e.perSide ? ' per side' : ''}` : e.work_s ? `${e.sets} × ${e.work_s} s` : `${e.sets} sets`;
@@ -14,9 +15,10 @@ const doseOf = (e: { sets: number; reps: number | string | null; work_s?: number
 /** Compact plain-text context for Claude (3.6). The profile paragraph comes from the phone, never from code. */
 export function contextPack(view: DayView, data: Data, question: string): string {
   const { pos, decision, session } = view;
+  const u = unitsOf(data.profile);
   const L: string[] = [ASK_INSTRUCTION, ''];
   const b = pos.block;
-  L.push(`Date: ${formatLong(view.date)} ${view.date.slice(0, 4)} (local)`);
+  L.push(`Date: ${formatLong(view.date)} ${view.date.slice(0, 4)} (local). Weights in ${u.unit === 'lb' ? 'pounds' : 'kilograms'}.`);
   L.push(`Plan: Year ${pos.year}, block ${b.code} ${b.name} (${TPL_LABEL[pos.tpl]}, ${PHASE_LABEL[b.phase]}), week ${pos.week} of ${b.weeks}, ${pos.weekType.name}, RIR ${pos.weekType.rir}${pos.status === 'paused' ? ', plan paused' : ''}`);
   L.push(`Today: ${session.title}${session.code ? ` (${session.kind})` : ''}. Session type: ${decision.type}. Why: ${decision.reason}.`);
   const c = view.checkin;
@@ -32,7 +34,7 @@ export function contextPack(view: DayView, data: Data, question: string): string
   if (session.exercises.length) {
     L.push('Session:');
     for (const e of session.exercises) {
-      const load = e.load?.kg != null ? ` @ ${fmtKg(e.load.kg)} kg${e.load.added ? ' added' : ''}` : '';
+      const load = e.load?.kg != null ? ` @ ${u.w(e.load.kg)}${e.load.added ? ' added' : ''}` : '';
       L.push(`- ${e.name} ${doseOf(e)}${load}, RIR ${e.rir}${e.changes.length ? ` (${e.changes.join('; ')})` : ''}`);
     }
   } else if (session.notes.length) L.push(`Plan today: ${session.notes.join(', ')}.`);
@@ -49,10 +51,10 @@ export function contextPack(view: DayView, data: Data, question: string): string
   L.push(`Sleep 7-day average: ${sleeps.length ? formatSleep(mean(sleeps) as number) : 'no data'}.`);
   const wNow = weeklyAverage(data.body, view.date);
   const w4 = weeklyAverage(data.body, addDays(view.date, -28));
-  L.push(`Weight 7-day average: ${wNow != null ? `${round1(wNow)} kg` : 'not enough weigh-ins'}${wNow != null && w4 != null ? `, 4-week trend ${round1((wNow - w4) / 4)} kg/week` : ''}.`);
+  L.push(`Weight 7-day average: ${wNow != null ? u.w(wNow, 1) : 'not enough weigh-ins'}${wNow != null && w4 != null ? `, 4-week trend ${u.rate((wNow - w4) / 4)}` : ''}.`);
   const maxes = STAT_LIFTS.map((l) => {
     const info = e1rmFor(l, view.date, data);
-    return info ? `${LIFTS[l].short} ${fmtKg(Math.round(info.e1rm * 10) / 10)} kg (${info.source === 'test' ? `tested ${info.baseDate}` : info.source === 'benchmark' ? 'benchmark, unverified' : 'estimated'})` : null;
+    return info ? `${LIFTS[l].short} ${u.w(info.e1rm, 1)} (${info.source === 'test' ? `tested ${info.baseDate}` : info.source === 'benchmark' ? 'benchmark, unverified' : 'estimated'})` : null;
   }).filter(Boolean);
   L.push(`Latest e1RMs: ${maxes.length ? maxes.join('; ') : 'none yet'}.`);
   const ws = startOfWeek(view.date);

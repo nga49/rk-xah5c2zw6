@@ -5,6 +5,8 @@ import { epley, ffmi, leanMass, weeklyAverage } from './formulas';
 import type { Data } from './model';
 import { live } from './model';
 import { pausesOf, realDateOf } from './position';
+import type { Units } from './units';
+import type { StandardDef } from '../plan/content';
 
 export interface Pt {
   x: ISODate;
@@ -195,3 +197,16 @@ export function standardValues(today: ISODate, data: Data): StandardValues {
     dates,
   };
 }
+
+/** A standard's target in the chosen unit ("2 × 110 lb", "+44 lb", "80 kg+"); non-weight targets keep their text. */
+export function standardText(def: StandardDef, which: 'y1' | 'y2' | 'goal', u: Units): string {
+  const kgTargets = def.targets && /kg/.test(def.unit);
+  if (!kgTargets || !def.targets) return def[which];
+  const v = def.targets[which];
+  if (def.key === 'farmer') return `2 × ${u.around(v)}`;
+  if (def.key === 'pullup3' || def.key === 'neck') return `+${u.around(v)}`;
+  return `${u.around(v)}${which === 'goal' ? '+' : ''}`;
+}
+
+/** "kg added" becomes "lb added" and so on. */
+export const standardUnit = (def: StandardDef, u: Units) => def.unit.replace('kg', u.label);

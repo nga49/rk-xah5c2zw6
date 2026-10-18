@@ -7,6 +7,7 @@ import type { Data } from '../engine/model';
 import { live } from '../engine/model';
 import { pausesOf, realDateOf } from '../engine/position';
 import { statsLines, weekStats, weekSuggestion } from '../engine/review';
+import { unitsOf } from '../engine/units';
 import { activeHabitSeasons, habitDue } from '../engine/tasks';
 import type { DayView } from '../engine/today';
 import { HABITS, SEASONS } from '../plan';
@@ -249,7 +250,7 @@ function SundayReview({ open, onClose, data, date }: { open: boolean; onClose: (
   const [answers, setAnswers] = useState<string[]>(existing?.answers ?? ['', '', '']);
   const stats = useMemo(() => weekStats(date, data), [date, data]);
   const suggestion = weekSuggestion(stats);
-  const lines = statsLines(stats);
+  const lines = statsLines(stats, unitsOf(data.profile));
   const history = live(data.reviews).filter((r) => r.id !== ws).sort((a, b) => (a.id < b.id ? 1 : -1));
   const save = async () => {
     await put('reviews', { id: ws, answers, stats: Object.fromEntries(lines), suggestion });

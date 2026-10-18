@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react';
 import { Check, Minus, Pause, Plane, Plus } from 'lucide-react';
 import type { ScreenProps } from '../App';
 import { addDays, diffDays, formatShort, startOfWeek, weekdayName, weekdayShort } from '../engine/dates';
-import { fmtKg } from '../engine/formulas';
-import { e1rmFor, stepFor } from '../engine/loads';
+import { e1rmFor } from '../engine/loads';
+import { unitsOf } from '../engine/units';
 import type { Data, Feel, Mark } from '../engine/model';
 import { live } from '../engine/model';
 import { getPosition, pausesOf } from '../engine/position';
@@ -147,7 +147,7 @@ function SessionCard({ view, data }: { view: DayView; data: Data }) {
           {s.notes.map((n) => <div key={n} style={{ color: 'var(--gold)', marginTop: 4 }}>{n}</div>)}
         </div>
         {s.exercises.map((ex) => (
-          <ExerciseRow key={ex.key} ex={ex} date={view.date} data={data} />
+          <ExerciseRow key={`${ex.key}:${data.profile?.units ?? 'kg'}`} ex={ex} date={view.date} data={data} />
         ))}
         {s.skipped.length > 0 && (
           <div className="ex skipped">
@@ -186,9 +186,11 @@ function ExerciseRow({ ex, date, data }: { ex: PlannedExercise; date: ISODate; d
   const logged = loggedToday(ex.name, date, data);
   const setsDone = data.days.get(date)?.session?.[ex.key] ?? 0;
   const hasLoad = takesLoad(ex.equipment) && ex.role !== 'test';
-  const step = stepFor(ex.equipment, data.profile?.dumbbellStep ?? 2);
-  const suggested = ex.load?.kg ?? undefined;
-  const [kg, setKg] = useState<number | undefined>(logged?.kg ?? suggested);
+  // The field shows the chosen unit; logs are stored in kg.
+  const u = unitsOf(data.profile);
+  const step = u.step(ex.equipment);
+  const suggested = ex.load?.kg != null ? u.show(ex.load.kg) : undefined;
+  const [shown, setShown] = useState<number | undefined>(logged ? u.show(logged.kg) : suggested);
   const done = !!logged || setsDone >= ex.sets;
   const tone = ex.role === 'test' ? 'ember' : ex.role === 'finisher' ? 'gold' : undefined;
 
@@ -196,11 +198,11 @@ function ExerciseRow({ ex, date, data }: { ex: PlannedExercise; date: ISODate; d
     const next = setsDone > i ? i : i + 1;
     void tickSet(date, ex.key, next);
     if (next > setsDone && next < ex.sets) startRest(ex.rest_s, `${ex.name} · set ${next} of ${ex.sets}`);
-    if (next >= ex.sets && hasLoad && !logged && kg != null) void logExercise(date, ex, kg);
+    if (next >= ex.sets && hasLoad && !logged && shown != null) void logExercise(date, ex, u.fromDisplay(shown));
   };
   const tickExercise = (on: boolean) => {
-    if (hasLoad && (kg != null || logged)) {
-      if (on && kg != null) void logExercise(date, ex, kg);
+    if (hasLoad && (shown != null || logged)) {
+      if (on && shown != null) void logExercise(date, ex, u.fromDisplay(shown));
       else if (!on) void unlogExercise(date, ex.name);
     } else void tickSet(date, ex.key, on ? ex.sets : 0);
   };
@@ -231,17 +233,17 @@ function ExerciseRow({ ex, date, data }: { ex: PlannedExercise; date: ISODate; d
         <div className="loadrow">
           {hasLoad && (
             <div className="kg">
-              <button aria-label="Lighter" onClick={() => setKg(Math.max(0, Math.round(((kg ?? suggested ?? 0) - step) * 100) / 100))}>
+              <button aria-label="Lighter" onClick={() => setShown(Math.max(0, Math.round(((shown ?? suggested ?? 0) - step) * 100) / 100))}>
                 <Minus size={18} />
               </button>
-              <NumInput value={kg} onChange={setKg} label={`${ex.name} weight`} placeholder="kg" />
-              <button aria-label="Heavier" onClick={() => setKg(Math.round(((kg ?? suggested ?? 0) + step) * 100) / 100)}>
+              <NumInput value={shown} onChange={setShown} label={`${ex.name} weight`} placeholder={u.label} />
+              <button aria-label="Heavier" onClick={() => setShown(Math.round(((shown ?? suggested ?? 0) + step) * 100) / 100)}>
                 <Plus size={18} />
               </button>
             </div>
           )}
-          <span className="tiny muted">{ex.load?.added ? 'kg added' : 'kg'}</span>
-          {!hasLoad && ex.load?.kg != null && <span className="num">{fmtKg(ex.load.kg)} kg</span>}
+          <span className="tiny muted">{ex.load?.added ? `${u.label} added` : u.label}</span>
+          {!hasLoad && ex.load?.kg != null && <span className="num">{u.w(ex.load.kg)}</span>}
           {ex.load?.badgeText && (
             <Chip tone={ex.load.badge === 'up' ? 'moss' : ex.load.badge === 'down' ? 'ember' : 'gold'} title={ex.load.badgeReason}>
               {ex.load.badgeText}

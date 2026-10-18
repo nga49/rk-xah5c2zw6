@@ -23,10 +23,13 @@ export interface Profile extends Rec {
   injuries: string;
   rules: string;
   startDate: ISODate;
-  units: 'kg';
+  /** Display and entry unit. Everything is stored in kg. */
+  units: 'kg' | 'lb';
   pinHash?: string;
   pinSalt?: string;
   dumbbellStep: number;
+  /** Dumbbell step in pounds, when units are lb. */
+  dumbbellStepLb?: number;
   safetyBar: boolean;
   beltSquat: boolean;
   calibrationResetAt?: ISODate;

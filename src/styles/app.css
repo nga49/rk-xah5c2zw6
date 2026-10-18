@@ -67,6 +67,10 @@ a { color: var(--frost); }
 .header .mark img { width: 40px; height: 40px; }
 .header h1 { font-family: var(--head); font-size: 20px; letter-spacing: 0.06em; margin: 0; flex: 1; }
 .header .status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.unit-toggle { display: inline-flex; padding: 3px; gap: 2px; border-radius: 12px; border: 1px solid var(--line); background: #0f1317; flex: none; }
+.unit-toggle button { min-width: 48px; min-height: 40px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-weight: 800; font-size: 15px; letter-spacing: 0.02em; }
+.unit-toggle button[aria-pressed='true'] { background: var(--gold); color: #1a1406; }
+.unit-toggle.compact button { min-width: 44px; min-height: 36px; font-size: 14px; }
 .main { flex: 1; width: 100%; max-width: 600px; margin: 0 auto; padding: 12px 16px calc(var(--tabbar) + var(--safe-bottom) + 96px); }
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;

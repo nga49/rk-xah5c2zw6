@@ -262,3 +262,16 @@ export function Fold({ title, children, open, right }: { title: ReactNode; child
 export function Empty({ children }: { children: ReactNode }) {
   return <div className="muted small center" style={{ padding: '14px 0' }}>{children}</div>;
 }
+
+/** kg | lb switch. Stored values stay in kg; only what is shown and typed changes. */
+export function UnitToggle({ unit, onChange, compact }: { unit: 'kg' | 'lb'; onChange: (u: 'kg' | 'lb') => void; compact?: boolean }) {
+  return (
+    <div className={cx('unit-toggle', compact && 'compact')} role="group" aria-label="Weight unit">
+      {(['kg', 'lb'] as const).map((u) => (
+        <button key={u} type="button" aria-pressed={unit === u} aria-label={u === 'kg' ? 'Kilograms' : 'Pounds'} onClick={() => unit !== u && onChange(u)}>
+          {u}
+        </button>
+      ))}
+    </div>
+  );
+}

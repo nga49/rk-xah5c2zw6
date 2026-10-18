@@ -1,5 +1,14 @@
 # Changelog
 
+## Kilos and pounds
+
+- A **kg | lb** switch in the header, on every screen, one tap. It is also in Settings → Gym and on the first setup screen.
+- Everything is still stored in kilos; only what is shown and typed changes, so no data moves and switching back gives the same numbers.
+- In pounds, loads round to plates you can actually load: 5 lb steps on barbells, cables and machines, 2.5 lb for added load on a belt, 10 lb on the sled, dumbbells at 2.5 or 5 lb (setting). A clean W5 offers +5 lb instead of +2.5 kg.
+- Converted: Train loads and badges, why-this-load text, the weigh-in, rep max and body forms, standards and their targets, Stats charts and records, trophies, insights, the weekly review, calorie trend reasons and the Ask Claude context pack.
+- Height and waist stay in centimetres.
+- Tests: unit conversion and plate rounding (6 unit tests), and two browser tests (switch converts live; setup in pounds stores kilos).
+
 ## Emblem: rustic Omega
 
 - At the owner's request the emblem is now a rustic Omega: chiseled, forged ember-red iron with hammered facets, an embossed bevel, dents, grain and cracks glowing like hot iron, on dark stone with an ember glow. It replaces the axe and blades.

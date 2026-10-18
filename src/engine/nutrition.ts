@@ -4,6 +4,7 @@ import { fmtKg, weeklyAverage } from './formulas';
 import type { Data } from './model';
 import { live } from './model';
 import type { Position } from './position';
+import { unitsOf } from './units';
 
 export interface Targets {
   kcal: number;
@@ -54,23 +55,25 @@ export function nutritionCheck(pos: Position, data: Data): NutritionCheck {
       const rate = (now - then) / 2;
       out.ratePerWeek = rate;
       const phase = pos.block.phase;
+      const u = unitsOf(data.profile);
+      const per = (kg: number) => `${u.w(kg)} a week`;
       let offset = 0;
       let reason = '';
       if (phase === 'cut' || phase === 'mini') {
-        if (rate < -0.5) { offset = 150; reason = 'Losing faster than 0.5 kg a week'; }
-        else if (rate > -0.1) { offset = -150; reason = 'Losing slower than 0.1 kg a week'; }
+        if (rate < -0.5) { offset = 150; reason = 'Losing faster than ' + per(0.5); }
+        else if (rate > -0.1) { offset = -150; reason = 'Losing slower than ' + per(0.1); }
       } else if (phase === 'build') {
-        if (rate > 0.2) { offset = -100; reason = 'Gaining faster than 0.2 kg a week'; }
-        else if (rate < 0.05) { offset = 100; reason = 'Gaining slower than 0.05 kg a week'; }
-      } else if (rate > 0.2) { offset = -100; reason = 'Weight drifting up more than 0.2 kg a week'; }
-      else if (rate < -0.2) { offset = 100; reason = 'Weight drifting down more than 0.2 kg a week'; }
+        if (rate > 0.2) { offset = -100; reason = 'Gaining faster than ' + per(0.2); }
+        else if (rate < 0.05) { offset = 100; reason = 'Gaining slower than ' + per(0.05); }
+      } else if (rate > 0.2) { offset = -100; reason = 'Weight drifting up more than ' + per(0.2); }
+      else if (rate < -0.2) { offset = 100; reason = 'Weight drifting down more than ' + per(0.2); }
       const id = `kcal:${pos.block.code}:${evalDay}`;
       if (offset && !applied(id)) {
         out.suggestion = {
           id,
           offset,
           title: `${offset > 0 ? '+' : ''}${offset} kcal`,
-          why: [`${reason} (${rate >= 0 ? '+' : ''}${fmtKg(Math.round(rate * 100) / 100)} kg/week, 14-day trend).`, `Phase: ${PHASE_WORD[phase]}.`],
+          why: [`${reason} (${u.rate(rate)}, 14-day trend).`, `Phase: ${PHASE_WORD[phase]}.`],
         };
       }
     }

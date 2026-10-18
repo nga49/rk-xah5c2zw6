@@ -5,11 +5,13 @@ import type { ScreenProps } from '../App';
 import { db } from '../db/db';
 import { newId, patchDay, put, remove } from '../db/store';
 import { addDays, formatMedium, formatShort, formatSleep } from '../engine/dates';
-import { epley, ffmi, fmtKg, leanMass, round1 } from '../engine/formulas';
+import { epley, ffmi, leanMass, round1 } from '../engine/formulas';
 import { bodyweightOn } from '../engine/loads';
 import type { BfSource, CardioLog, CardioType, Data, MaxLog, Photo } from '../engine/model';
 import { CARDIO_TYPES, live } from '../engine/model';
+import { standardText, standardUnit } from '../engine/stats';
 import type { DayView } from '../engine/today';
+import { unitsOf } from '../engine/units';
 import { LIFTS, ROTATION } from '../plan';
 import { STANDARDS, type StandardKey } from '../plan/content';
 import type { ISODate, LiftKey } from '../plan/types';
@@ -41,9 +43,9 @@ export function Log({ data, view, route }: ScreenProps) {
       </div>
       {tab === 'activity' && <Activity data={data} today={view.date} />}
       {tab === 'sleep' && <Sleep data={data} today={view.date} />}
-      {tab === 'max' && <RepMax data={data} view={view} />}
-      {tab === 'body' && <Body data={data} today={view.date} />}
-      {tab === 'standards' && <Standards data={data} today={view.date} />}
+      {tab === 'max' && <RepMax key={data.profile?.units} data={data} view={view} />}
+      {tab === 'body' && <Body key={data.profile?.units} data={data} today={view.date} />}
+      {tab === 'standards' && <Standards key={data.profile?.units} data={data} today={view.date} />}
     </div>
   );
 }
@@ -210,16 +212,21 @@ function RepMax({ data, view }: { data: Data; view: DayView }) {
   const [kg, setKg] = useState<number | undefined>();
   const [reps, setReps] = useState<number | undefined>(3);
   const [date, setDate] = useState(view.date);
-  const bwDefault = bodyweightOn(date, data) ?? undefined;
+  const u = unitsOf(data.profile);
+  const bwKg = bodyweightOn(date, data);
+  const bwDefault = bwKg != null ? u.show(bwKg) : undefined;
   const [bw, setBw] = useState<number | undefined>(bwDefault);
   const isBw = !!LIFTS[lift].bodyweight;
   const e1 = kg != null && reps ? epley(kg + (isBw ? (bw ?? 0) : 0), reps) : null;
   const list = live(data.maxes).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.updatedAt - a.updatedAt));
   const save = async () => {
     if (kg == null || !reps || (isBw && bw == null)) return;
-    const total = isBw ? kg + (bw as number) : kg;
-    await put('maxes', { id: editing?.id ?? newId(), date, lift, weightKg: kg, reps, bodyweightKg: isBw ? bw : undefined, e1rm: epley(total, reps), source: editing?.source ?? 'test' });
-    toast(`e1RM ${fmtKg(round1(epley(total, reps)))} kg saved`);
+    // Typed in the chosen unit, stored in kg.
+    const kgLoad = u.fromDisplay(kg);
+    const kgBw = isBw ? u.fromDisplay(bw as number) : undefined;
+    const total = kgLoad + (kgBw ?? 0);
+    await put('maxes', { id: editing?.id ?? newId(), date, lift, weightKg: kgLoad, reps, bodyweightKg: kgBw, e1rm: epley(total, reps), source: editing?.source ?? 'test' });
+    toast(`e1RM ${u.w(epley(total, reps), 1)} saved`);
     setEditing(null);
     setKg(undefined);
   };
@@ -244,14 +251,14 @@ function RepMax({ data, view }: { data: Data; view: DayView }) {
             </select>
           </Field>
           <div className="grid2">
-            <Field label={isBw ? 'Added load' : 'Weight'}><NumInput value={kg} onChange={setKg} unit="kg" label="Weight" className="num" /></Field>
+            <Field label={isBw ? 'Added load' : 'Weight'}><NumInput value={kg} onChange={setKg} unit={u.label} label="Weight" className="num" /></Field>
             <Field label="Reps"><NumInput value={reps} onChange={setReps} label="Reps" className="num" /></Field>
           </div>
-          {isBw && <Field label="Bodyweight that day"><NumInput value={bw} onChange={setBw} unit="kg" label="Bodyweight" /></Field>}
+          {isBw && <Field label="Bodyweight that day"><NumInput value={bw} onChange={setBw} unit={u.label} label="Bodyweight" /></Field>}
           <DateField value={date} onChange={setDate} max={view.date} />
           <div className="row between">
             <span className="muted small">Estimated 1RM</span>
-            <span className="num" style={{ fontSize: 24, color: 'var(--ember)' }}>{e1 ? `${fmtKg(round1(e1))} kg` : '·'}</span>
+            <span className="num" style={{ fontSize: 24, color: 'var(--ember)' }}>{e1 ? `${round1(e1)} ${u.label}` : '·'}</span>
           </div>
           <button className="btn primary block" disabled={kg == null || !reps || (isBw && bw == null)} onClick={() => void save()}>{editing ? 'Update' : 'Save rep max'}</button>
           {editing && <button className="link-btn" onClick={() => setEditing(null)}>Cancel edit</button>}
@@ -262,18 +269,18 @@ function RepMax({ data, view }: { data: Data; view: DayView }) {
         {list.map((m) => (
           <div key={m.id} className="list-row">
             <div className="grow">
-              <div style={{ fontWeight: 600 }}>{LIFTS[m.lift].short} · {LIFTS[m.lift].bodyweight ? '+' : ''}{fmtKg(m.weightKg)} kg × {m.reps}</div>
-              <div className="tiny muted">{formatMedium(m.date)} · e1RM {fmtKg(round1(m.e1rm))} kg</div>
+              <div style={{ fontWeight: 600 }}>{LIFTS[m.lift].short} · {LIFTS[m.lift].bodyweight ? '+' : ''}{u.w(m.weightKg)} × {m.reps}</div>
+              <div className="tiny muted">{formatMedium(m.date)} · e1RM {u.w(m.e1rm, 1)}</div>
             </div>
             <Chip tone={m.source === 'test' ? 'moss' : 'gold'}>{m.source === 'test' ? 'Tested' : 'Unverified'}</Chip>
             <RowActions
               onEdit={() => {
                 setEditing(m);
                 setLift(m.lift);
-                setKg(m.weightKg);
+                setKg(u.show(m.weightKg));
                 setReps(m.reps);
                 setDate(m.date);
-                setBw(m.bodyweightKg);
+                setBw(m.bodyweightKg != null ? u.show(m.bodyweightKg) : undefined);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               onDelete={() => void remove('maxes', m.id)}
@@ -317,6 +324,7 @@ function Body({ data, today }: { data: Data; today: ISODate }) {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const list = live(data.body).filter((b) => b.weightKg != null || b.bodyFatPct != null || b.waistCm != null || b.photoIds?.length).sort((a, b) => (a.date < b.date ? 1 : -1));
   const h = data.profile?.heightCm;
+  const u = unitsOf(data.profile);
   const latest = useMemo(() => {
     for (const b of list) {
       if (b.bodyFatPct == null) continue;
@@ -340,7 +348,7 @@ function Body({ data, today }: { data: Data; today: ISODate }) {
   const save = async () => {
     if (w == null && bf == null && waist == null && !photos.length) return;
     const prev = editingId ? await db.body.get(editingId) : undefined;
-    await put('body', { ...(prev ?? {}), id: editingId ?? newId(), date, weightKg: w, bodyFatPct: bf, bfSource: bf != null ? src : undefined, waistCm: waist, photoIds: [...(prev?.photoIds ?? []), ...photos.map((p) => p.id)] });
+    await put('body', { ...(prev ?? {}), id: editingId ?? newId(), date, weightKg: w != null ? u.fromDisplay(w) : undefined, bodyFatPct: bf, bfSource: bf != null ? src : undefined, waistCm: waist, photoIds: [...(prev?.photoIds ?? []), ...photos.map((p) => p.id)] });
     toast('Saved');
     setEditingId(null);
     setW(undefined);
@@ -353,7 +361,7 @@ function Body({ data, today }: { data: Data; today: ISODate }) {
       {latest && (
         <Card tone="moss" toned>
           <div className="row between">
-            <div><div className="label">Lean mass</div><div className="num" style={{ fontSize: 26 }}>{round1(latest.lean)} kg</div></div>
+            <div><div className="label">Lean mass</div><div className="num" style={{ fontSize: 26 }}>{u.w(latest.lean, 1)}</div></div>
             {latest.ffmi != null && <div><div className="label">FFMI (normalised)</div><div className="num" style={{ fontSize: 26 }}>{round1(latest.ffmi)}</div></div>}
           </div>
           <div className="tiny muted" style={{ marginTop: 4 }}>From {formatMedium(latest.date)}. Goal FFMI about 22.</div>
@@ -363,7 +371,7 @@ function Body({ data, today }: { data: Data; today: ISODate }) {
         <div className="stack">
           <DateField value={date} onChange={setDate} max={today} />
           <div className="grid2">
-            <Field label="Weight"><NumInput value={w} onChange={setW} unit="kg" label="Weight" /></Field>
+            <Field label="Weight"><NumInput value={w} onChange={setW} unit={u.label} label="Weight" /></Field>
             <Field label="Waist at the navel"><NumInput value={waist} onChange={setWaist} unit="cm" label="Waist" /></Field>
           </div>
           <div className="grid2">
@@ -384,7 +392,7 @@ function Body({ data, today }: { data: Data; today: ISODate }) {
           <div key={b.id} className="list-row">
             <div className="grow">
               <div style={{ fontWeight: 600 }}>
-                {[b.weightKg != null && `${fmtKg(b.weightKg)} kg`, b.bodyFatPct != null && `${b.bodyFatPct}% ${b.bfSource ?? ''}`, b.waistCm != null && `waist ${b.waistCm} cm`, b.photoIds?.length && `${b.photoIds.length} photo${b.photoIds.length > 1 ? 's' : ''}`].filter(Boolean).join(' · ')}
+                {[b.weightKg != null && u.w(b.weightKg), b.bodyFatPct != null && `${b.bodyFatPct}% ${b.bfSource ?? ''}`, b.waistCm != null && `waist ${b.waistCm} cm`, b.photoIds?.length && `${b.photoIds.length} photo${b.photoIds.length > 1 ? 's' : ''}`].filter(Boolean).join(' · ')}
               </div>
               <div className="tiny muted">{formatMedium(b.date)}</div>
             </div>
@@ -392,7 +400,7 @@ function Body({ data, today }: { data: Data; today: ISODate }) {
               onEdit={() => {
                 setEditingId(b.id);
                 setDate(b.date);
-                setW(b.weightKg);
+                setW(b.weightKg != null ? u.show(b.weightKg) : undefined);
                 setBf(b.bodyFatPct);
                 setSrc(b.bfSource ?? 'scale');
                 setWaist(b.waistCm);
@@ -439,16 +447,18 @@ function Standards({ data, today }: { data: Data; today: ISODate }) {
   const [date, setDate] = useState(today);
   const [editId, setEditId] = useState<string | null>(null);
   const def = STANDARDS.find((s) => s.key === key)!;
+  const u = unitsOf(data.profile);
+  const isWeight = (d?: { unit: string }) => d != null && /kg/.test(d.unit);
   const list = live(data.standards).sort((a, b) => (a.date < b.date ? 1 : -1));
   return (
     <div className="stack">
       <Card tone="moss" toned>
         <div className="stack">
           <Seg label="Standard" tone="moss" value={key} onChange={setKey} options={logged.map((s) => ({ value: s.key, label: s.key === 'farmer' ? 'Farmer' : s.key === 'neck' ? 'Neck' : 'Zone 2' }))} />
-          <div className="small muted">{def.name}. Targets: Y1 {def.y1} · Y2 {def.y2} · Goal {def.goal}.</div>
-          <Field label={def.unit}><NumInput value={value} onChange={setValue} unit={def.unit === 'min' ? 'min' : 'kg'} label={def.name} className="num" /></Field>
+          <div className="small muted">{def.name}. Targets: Y1 {standardText(def, 'y1', u)} · Y2 {standardText(def, 'y2', u)} · Goal {standardText(def, 'goal', u)}.</div>
+          <Field label={standardUnit(def, u)}><NumInput value={value} onChange={setValue} unit={isWeight(def) ? u.label : 'min'} label={def.name} className="num" /></Field>
           <DateField value={date} onChange={setDate} max={today} />
-          <button className="btn primary block" disabled={value == null} onClick={() => void put('standards', { id: editId ?? newId(), date, standard: key, value: value as number }).then(() => { toast(editId ? 'Updated' : 'Saved'); setValue(undefined); setEditId(null); })}>{editId ? 'Update' : 'Save'}</button>
+          <button className="btn primary block" disabled={value == null} onClick={() => void put('standards', { id: editId ?? newId(), date, standard: key, value: isWeight(def) ? u.fromDisplay(value as number) : (value as number) }).then(() => { toast(editId ? 'Updated' : 'Saved'); setValue(undefined); setEditId(null); })}>{editId ? 'Update' : 'Save'}</button>
         </div>
       </Card>
       <Card>
@@ -458,14 +468,14 @@ function Standards({ data, today }: { data: Data; today: ISODate }) {
           return (
             <div key={s.id} className={cx('list-row')}>
               <div className="grow">
-                <div style={{ fontWeight: 600 }}>{d?.name}: {s.value} {d?.unit}</div>
+                <div style={{ fontWeight: 600 }}>{d?.name}: {isWeight(d) ? `${u.show(s.value)} ${d && standardUnit(d, u)}` : `${s.value} ${d?.unit}`}</div>
                 <div className="tiny muted">{formatMedium(s.date)}</div>
               </div>
               <RowActions
                 onEdit={() => {
                   setEditId(s.id);
                   setKey(s.standard);
-                  setValue(s.value);
+                  setValue(isWeight(d) ? u.show(s.value) : s.value);
                   setDate(s.date);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}

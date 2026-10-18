@@ -7,6 +7,7 @@ import type { Data } from './model';
 import { live } from './model';
 import { pausesOf, realDateOf } from './position';
 import { standardValues } from './stats';
+import { unitsOf } from './units';
 
 export interface Trophy {
   id: string;
@@ -33,6 +34,7 @@ function streakDates(data: Data): Map<number, ISODate> {
 
 export function trophies(today: ISODate, data: Data): Trophy[] {
   const out: Trophy[] = [];
+  const u = unitsOf(data.profile);
   const checkins = [...data.days.values()].filter((d) => d.checkin && !d.deleted).map((d) => d.id).sort();
   out.push({ id: 'first', name: 'First Light', what: 'First check-in', on: checkins[0] ?? null, tone: 'frost' });
   const streaks = streakDates(data);
@@ -98,16 +100,16 @@ export function trophies(today: ISODate, data: Data): Trophy[] {
     const w = b.weightKg ?? weeklyAverage(data.body, b.date, 1);
     if (w != null && w >= 88 && (!goal || b.date < goal)) goal = b.date;
   }
-  out.push({ id: 'cut', name: 'Lean Wolf', what: 'Cut target reached: 84 kg weekly average', on: cut, tone: 'frost' });
-  out.push({ id: 'goal', name: 'Ragnarok Reached', what: 'Goal zone: 88 kg+ at 15.5% or less on a DEXA', on: goal, tone: 'gold' });
+  out.push({ id: 'cut', name: 'Lean Wolf', what: `Cut target reached: ${u.around(84)} weekly average`, on: cut, tone: 'frost' });
+  out.push({ id: 'goal', name: 'Ragnarok Reached', what: `Goal zone: ${u.around(88)}+ at 15.5% or less on a DEXA`, on: goal, tone: 'gold' });
 
   const sv = standardValues(today, data);
   const std: [string, string, string, boolean][] = [
-    ['ohp', 'Sky Press', 'Overhead press e1RM 80 kg', (sv.ohp ?? 0) >= 80],
-    ['pullup3', 'Mountain Pull', 'Pull-up 3 reps with +40 kg', (sv.pullup3 ?? 0) >= 40],
-    ['farmer', 'Iron Yoke', 'Farmer carry 40 m with 2 × 50 kg', (sv.farmer ?? 0) >= 50],
+    ['ohp', 'Sky Press', `Overhead press e1RM ${u.around(80)}`, (sv.ohp ?? 0) >= 80],
+    ['pullup3', 'Mountain Pull', `Pull-up 3 reps with +${u.around(40)}`, (sv.pullup3 ?? 0) >= 40],
+    ['farmer', 'Iron Yoke', `Farmer carry 40 m with 2 × ${u.around(50)}`, (sv.farmer ?? 0) >= 50],
     ['bench', 'Anvil Chest', 'Bench e1RM +7.5% over the verified max', sv.benchGain != null && sv.benchGain >= 0.075],
-    ['neck', 'Bull Neck', 'Neck +15 kg for 15 reps', (sv.neck ?? 0) >= 15],
+    ['neck', 'Bull Neck', `Neck +${u.around(15)} for 15 reps`, (sv.neck ?? 0) >= 15],
     ['waistHeight', 'Narrow Waist', 'Waist under half your height', sv.waistHeight != null && sv.waistHeight < 0.5],
     ['zone2', 'Long Breath', 'Zone 2 for 45 min', (sv.zone2 ?? 0) >= 45],
   ];

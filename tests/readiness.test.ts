@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { addDays } from '../src/engine/dates';
 import { roundDown } from '../src/engine/formulas';
 import { buildInsights } from '../src/engine/insights';
-import { accessoryProgress, dropFive, e1rmFor, feedbackAdjustments } from '../src/engine/loads';
+import { accessoryProgress, e1rmFor, feedbackAdjustments } from '../src/engine/loads';
+import { unitsOf } from '../src/engine/units';
 import type { Data, SessionType } from '../src/engine/model';
 import { getPosition } from '../src/engine/position';
 import { calibrationFor, decide, readinessScore } from '../src/engine/readiness';
@@ -141,12 +142,12 @@ describe('acceptance 12a: accessory progression', () => {
     const data = makeData();
     weight(data, '2026-10-23', name, 12, 'clean');
     weight(data, '2026-10-30', name, 12, 'clean');
-    const up = accessoryProgress(name, data.weights, '2026-11-06', 2);
+    const up = accessoryProgress(name, data.weights, '2026-11-06', unitsOf(data.profile));
     expect(up).toMatchObject({ kg: 14, badge: 'up', reason: '2 clean sessions in a row' });
     weight(data, '2026-11-06', name, 14, 'hard');
-    expect(accessoryProgress(name, data.weights, '2026-11-13', 2)).toMatchObject({ kg: 14, badge: 'hold' });
+    expect(accessoryProgress(name, data.weights, '2026-11-13', unitsOf(data.profile))).toMatchObject({ kg: 14, badge: 'hold' });
     weight(data, '2026-11-13', name, 14, 'hard');
-    expect(accessoryProgress(name, data.weights, '2026-11-20', 2)).toMatchObject({ kg: 12, badge: 'down' });
+    expect(accessoryProgress(name, data.weights, '2026-11-20', unitsOf(data.profile))).toMatchObject({ kg: 12, badge: 'down' });
   });
   it('shows on the exercise in the session, pre-filled', () => {
     const data = makeData();
@@ -158,9 +159,10 @@ describe('acceptance 12a: accessory progression', () => {
     expect(ex?.load).toMatchObject({ kg: 14, badge: 'up', badgeText: '↑ +2 kg' });
   });
   it('5% drop always goes at least one step down', () => {
-    expect(dropFive(100, 'barbell', 2)).toBe(95);
-    expect(dropFive(14, 'dumbbell', 2)).toBe(12);
-    expect(dropFive(20, 'cable', 2)).toBe(17.5);
+    const kg = unitsOf({ units: 'kg', dumbbellStep: 2 });
+    expect(kg.dropFive(100, 'barbell')).toBe(95);
+    expect(kg.dropFive(14, 'dumbbell')).toBe(12);
+    expect(kg.dropFive(20, 'cable')).toBe(17.5);
   });
 });
 

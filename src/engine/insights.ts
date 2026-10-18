@@ -1,7 +1,6 @@
 import { BLOCKS, HABITS, LIFTS, ROTATION, SEASONS, TPL_LABEL } from '../plan';
 import type { ISODate, LiftKey, Tone } from '../plan/types';
 import { addDays, diffDays, formatSleep, startOfWeek, weekday, weekdayName } from './dates';
-import { fmtKg } from './formulas';
 import type { Data, SessionType } from './model';
 import { live } from './model';
 import type { DueTest } from './maxtests';
@@ -11,6 +10,7 @@ import { isHeavy, sleepAverage3 } from './readiness';
 import { scheduledCode, type CardioBalance, type SwapOffer } from './schedule';
 import { nextVariation } from './session';
 import { habitDue } from './tasks';
+import { unitsOf } from './units';
 
 export type InsightAction =
   | { kind: 'applyKcal'; block: string; offset: number; sourceId: string; reason: string }
@@ -81,6 +81,7 @@ export interface InsightContext {
 
 export function buildInsights(ctx: InsightContext): Insight[] {
   const { date, pos, data } = ctx;
+  const u = unitsOf(data.profile);
   const out: Insight[] = [];
   const day = data.days.get(date);
   const yesterday = data.days.get(addDays(date, -1));
@@ -192,7 +193,7 @@ export function buildInsights(ctx: InsightContext): Insight[] {
       out.push({
         id, priority: 61, tone: 'gold', icon: 'plateau', area: 'session', dismissible: true,
         title: `${LIFTS[lift].short} flat across 2 tests`, body: `Try ${LIFTS[next].name} next block.`,
-        why: [`${fmtKg(Math.round(a.e1rm))} → ${fmtKg(Math.round(b.e1rm))} kg e1RM.`, sleep ? `Sleep 28-day average ${formatSleep(sleep)}.` : 'Log sleep to check recovery.', 'Check calories and readiness trends too.'],
+        why: [`${u.w(a.e1rm, 1)} → ${u.w(b.e1rm, 1)} e1RM.`, sleep ? `Sleep 28-day average ${formatSleep(sleep)}.` : 'Log sleep to check recovery.', 'Check calories and readiness trends too.'],
         action: { kind: 'acceptVariant', slot, lift: next, fromBlock: nextBlock.code, label: 'Use it next block' },
       });
     }
@@ -213,11 +214,13 @@ export function buildInsights(ctx: InsightContext): Insight[] {
       for (const [lift, marks] of byLift) {
         const id = `w5:${pos.block.code}:${lift}`;
         if (marks.length && marks.every(Boolean)) {
+          // One plate step: 2.5 kg, or 5 lb in pounds.
+          const stepKg = u.fromDisplay(u.step('barbell'));
           out.push({
             id, priority: 60, tone: 'moss', icon: 'up', area: 'session', dismissible: true,
-            title: `${LIFTS[lift].short}: W5 all clean`, body: `+2.5 kg on its loads in ${nextSame.code}?`,
+            title: `${LIFTS[lift].short}: W5 all clean`, body: `+${u.w(stepKg, 1)} on its loads in ${nextSame.code}?`,
             why: ['Every logged W5 session was clean.'],
-            action: { kind: 'acceptOffset', lift, kg: 2.5, fromBlock: nextSame.code, label: '+2.5 kg next block' },
+            action: { kind: 'acceptOffset', lift, kg: stepKg, fromBlock: nextSame.code, label: `+${u.w(stepKg, 1)} next block` },
           });
         }
       }
@@ -292,8 +295,8 @@ export function buildInsights(ctx: InsightContext): Insight[] {
     if (m.e1rm > best && before.length) {
       out.push({
         id: `pr:${m.id}`, priority: 30, tone: 'gold', icon: 'trophy', area: 'win', dismissible: true,
-        title: `Personal record: ${LIFTS[m.lift].short}`, body: `e1RM ${fmtKg(Math.round(m.e1rm * 10) / 10)} kg`,
-        why: [`Previous best ${fmtKg(Math.round(best * 10) / 10)} kg.`],
+        title: `Personal record: ${LIFTS[m.lift].short}`, body: `e1RM ${u.w(m.e1rm, 1)}`,
+        why: [`Previous best ${u.w(best, 1)}.`],
       });
     }
   }

@@ -17,6 +17,10 @@ A private training and mindset companion for one person: a four-year plan (36 bl
 
 These are the iOS 26 steps; menus may differ slightly on newer versions. The app opens full screen and works offline after the first visit.
 
+## Kilos and pounds
+
+Tap **kg | lb** at the top right of any screen. Every weight converts at once: suggested loads, the weigh-in, rep maxes, charts, records, standards and the Ask Claude summary. Values are stored in kilos, so switching back and forth never drifts. In pounds, barbell and machine loads round to 5 lb steps (2 × 2.5 lb plates), added load on a belt to 2.5 lb, and dumbbells to the step set in **Settings → Gym** (2.5 or 5 lb). Height and waist stay in centimetres.
+
 ## Backup to GitHub
 
 Do this once.

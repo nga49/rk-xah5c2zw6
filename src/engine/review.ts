@@ -1,11 +1,12 @@
 import { STEPS_GOAL } from '../plan';
 import type { ISODate } from '../plan/types';
 import { addDays, formatSleep, startOfWeek } from './dates';
-import { fmtInt, mean, round1, weeklyAverage } from './formulas';
+import { fmtInt, mean, weeklyAverage } from './formulas';
 import { habitRate } from './insights';
 import type { Data } from './model';
 import { live } from './model';
 import { getPosition } from './position';
+import type { Units } from './units';
 
 export interface WeekStats {
   weekStart: ISODate;
@@ -62,7 +63,7 @@ export function weekSuggestion(w: WeekStats): string {
   return 'A solid week. Keep the same rhythm. Nothing new.';
 }
 
-export function statsLines(w: WeekStats): [string, string][] {
+export function statsLines(w: WeekStats, u: Units): [string, string][] {
   return [
     ['Check-ins', `${w.checkins}/7`],
     ['Readiness', w.readiness != null ? `${Math.round(w.readiness)}` : 'none'],
@@ -71,7 +72,7 @@ export function statsLines(w: WeekStats): [string, string][] {
     ['Steps', w.steps != null ? `${fmtInt(w.steps)} (goal ${fmtInt(STEPS_GOAL)})` : 'none'],
     ['Cardio', `${w.cardioMin} min`],
     ['Mobility', `${w.mobilityMin} min`],
-    ['Weight avg', w.weight != null ? `${round1(w.weight)} kg` : 'need 3 weigh-ins'],
+    ['Weight avg', w.weight != null ? u.w(w.weight, 1) : 'need 3 weigh-ins'],
     ['Habit', w.habit != null ? `${w.habitName} ${Math.round(w.habit * 100)}%` : 'none'],
     ['Daily code', w.code != null ? `${Math.round(w.code * 100)}%` : 'none'],
   ];

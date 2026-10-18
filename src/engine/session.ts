@@ -15,8 +15,9 @@ import { TRAVEL_NOTE, TRAVEL_SESSION, TRAVEL_WEDNESDAY } from '../plan/content';
 import { equipmentFor, takesLoad, type Equipment } from '../plan/exercises';
 import type { DayTemplate, ISODate, LiftKey, SessionCode, TemplateExercise, Tone } from '../plan/types';
 import { weekday } from './dates';
-import { fmtKg, loadForTarget, roundDown } from './formulas';
-import { accessoryProgress, bodyweightOn, e1rmFor, historyFor, liftOffsetKg, roundFor, type E1rmInfo } from './loads';
+import { loadForTarget } from './formulas';
+import { accessoryProgress, bodyweightOn, e1rmFor, historyFor, liftOffsetKg, type E1rmInfo } from './loads';
+import { unitsOf } from './units';
 import type { Data, SessionType } from './model';
 import type { Position } from './position';
 
@@ -265,12 +266,14 @@ function upperOnly(d: Draft, code: SessionCode | null): void {
 function mainLoad(d: Draft, pos: Position, mods: Mods, data: Data): LoadSuggestion {
   const link = d.link as LiftLink;
   const wt = pos.weekType;
+  const u = unitsOf(data.profile);
+  const eq = d.equipment;
   const info = e1rmFor(link.lift, pos.date, data);
   const remembered = historyFor(d.name, data.weights, pos.date).at(-1);
   if (!info) {
     return {
       kg: remembered ? remembered.kg : null,
-      why: [remembered ? `No max yet. Last used ${fmtKg(remembered.kg)} kg.` : 'No max yet. Pick a load you can lift at the RIR target.'],
+      why: [remembered ? `No max yet. Last used ${u.w(remembered.kg)}.` : 'No max yet. Pick a load you can lift at the RIR target.'],
       badge: null,
     };
   }
@@ -286,22 +289,22 @@ function mainLoad(d: Draft, pos: Position, mods: Mods, data: Data): LoadSuggesti
     if (link.pct.cap) pct = Math.min(pct, link.pct.cap);
     if (LIFTS[link.lift].bodyweight) {
       const bw = bodyweightOn(pos.date, data);
-      if (bw == null) return { kg: null, why: [`${pct}% of e1RM ${fmtKg(e1)} kg (${srcText}).`, 'Log your weight to get the added load.'], badge: null, e1rm: info };
+      if (bw == null) return { kg: null, why: [`${pct}% of e1RM ${u.w(e1)} (${srcText}).`, 'Log your weight to get the added load.'], badge: null, e1rm: info };
       const total = (e1 * pct) / 100 + offset;
-      kg = Math.max(0, roundDown(total - bw));
+      kg = Math.max(0, u.roundDown(total - bw, eq));
       added = true;
-      why.push(`${pct}% of e1RM ${fmtKg(e1)} kg (${srcText}) minus bodyweight ${fmtKg(Math.round(bw * 10) / 10)} kg.`);
+      why.push(`${pct}% of e1RM ${u.w(e1)} (${srcText}) minus bodyweight ${u.w(bw)}.`);
     } else {
-      kg = roundDown((e1 * pct) / 100 + offset);
-      why.push(`${pct}% of e1RM ${fmtKg(e1)} kg (${srcText})${wt.reload ? ', reload uses W1' : ''}.`);
+      kg = u.roundDown((e1 * pct) / 100 + offset, eq);
+      why.push(`${pct}% of e1RM ${u.w(e1)} (${srcText})${wt.reload ? ', reload uses W1' : ''}.`);
     }
   } else {
     const reps = d.repsTop ?? 10;
     const rir = Math.max(1, wt.rirCalc);
-    kg = roundDown(loadForTarget(e1, reps, rir) + offset);
-    why.push(`${reps} reps at RIR ${rir} from e1RM ${fmtKg(e1)} kg (${srcText}).`);
+    kg = u.roundDown(loadForTarget(e1, reps, rir) + offset, eq);
+    why.push(`${reps} reps at RIR ${rir} from e1RM ${u.w(e1)} (${srcText}).`);
   }
-  if (offset) why.push(`+${fmtKg(offset)} kg after a clean W5.`);
+  if (offset) why.push(`+${u.w(offset)} after a clean W5.`);
   for (const a of info.adjustments) why.push(`${a.pct > 0 ? '+' : ''}${a.pct}% on ${a.date.slice(5)}: ${a.reason}.`);
 
   let badge: LoadSuggestion['badge'] = null;
@@ -316,13 +319,13 @@ function mainLoad(d: Draft, pos: Position, mods: Mods, data: Data): LoadSuggesti
   const dayFactor = mods.intensity === 'moderate' ? 0.9 : mods.intensity === 'light' ? 0.75 : 1;
   const factor = Math.min(dayFactor, d.loadFactor ?? 1);
   if (factor < 1) {
-    kg = roundDown(kg * factor);
+    kg = u.roundDown(kg * factor, eq);
     why.push(d.loadFactor && d.loadFactor <= dayFactor ? `${Math.round(factor * 100)}% of usual: back rule.` : `${Math.round(factor * 100)}%: ${mods.intensity === 'light' ? 'Light' : 'Moderate'} day.`);
   }
   let badgeText: string | undefined;
   if (!badge && remembered && kg > remembered.kg && mods.intensity === 'full' && !d.loadFactor) {
     badge = 'up';
-    badgeText = `↑ +${fmtKg(kg - remembered.kg)} kg`;
+    badgeText = `↑ +${u.w(kg - remembered.kg)}`;
     badgeReason = `Week ${pos.week} load`;
   }
   return { kg, why, badge, badgeText, badgeReason, e1rm: info, added };
@@ -330,13 +333,13 @@ function mainLoad(d: Draft, pos: Position, mods: Mods, data: Data): LoadSuggesti
 
 function accessoryLoad(d: Draft, pos: Position, data: Data): LoadSuggestion | null {
   if (!takesLoad(d.equipment)) return null;
-  const step = data.profile?.dumbbellStep ?? 2;
-  const p = accessoryProgress(d.name, data.weights, pos.date, step);
+  const u = unitsOf(data.profile);
+  const p = accessoryProgress(d.name, data.weights, pos.date, u);
   if (p.kg == null) return { kg: null, why: [`RIR ${d.rir}. No weight logged yet.`], badge: null };
   let kg = p.kg;
-  const why = [p.reason ? `${p.reason}.` : `Last used ${fmtKg(p.lastKg as number)} kg.`];
+  const why = [p.reason ? `${p.reason}.` : `Last used ${u.w(p.lastKg as number)}.`];
   if (d.loadFactor) {
-    kg = roundFor(kg * d.loadFactor, d.equipment, step);
+    kg = u.roundFor(kg * d.loadFactor, d.equipment);
     why.push(`${Math.round(d.loadFactor * 100)}% for the back.`);
   }
   const sign = p.deltaKg > 0 ? '↑ +' : p.deltaKg < 0 ? '↓ ' : '';
@@ -344,7 +347,7 @@ function accessoryLoad(d: Draft, pos: Position, data: Data): LoadSuggestion | nu
     kg,
     why,
     badge: p.badge,
-    badgeText: p.badge === 'up' || p.badge === 'down' ? `${sign}${fmtKg(p.deltaKg)} kg` : p.badge === 'hold' ? 'Hold' : undefined,
+    badgeText: p.badge === 'up' || p.badge === 'down' ? `${sign}${u.w(Math.abs(p.deltaKg))}` : p.badge === 'hold' ? 'Hold' : undefined,
     badgeReason: p.reason ?? undefined,
   };
 }
@@ -497,7 +500,7 @@ export function buildSession(input: BuildInput): SessionPlan {
   const tests = input.tests ?? [];
   const testRows: PlannedExercise[] = tests.map((t) => {
     const info = e1rmFor(t.lift, date, data);
-    const aim = info ? roundDown(info.e1rm / (1 + 3 / 30)) : null;
+    const aim = info ? unitsOf(data.profile).roundDown(info.e1rm / (1 + 3 / 30), 'barbell') : null;
     const bodyweight = LIFTS[t.lift].bodyweight;
     return {
       key: `test:${t.lift}`,

@@ -8,6 +8,7 @@ import { CARDIO_TYPES, live } from '../engine/model';
 import { sessionTone } from '../engine/readiness';
 import { completion, type Task } from '../engine/tasks';
 import { computeDay, type DayView } from '../engine/today';
+import { unitsOf } from '../engine/units';
 import { DAILY_CODE, PHASE_LABEL, PHASE_TONE, SEASONS, TPL_LABEL, TPL_TONE } from '../plan';
 import type { ISODate } from '../plan/types';
 import { logBodyToday, logCardio, setMobility, setSteps, toggleCode, toggleTask } from '../state/actions';
@@ -147,8 +148,8 @@ function TaskRow({ task, date, data }: { task: Task; date: ISODate; data: Data }
         {task.input === 'cardio' && <CardioInline date={date} task={task} />}
       </div>
       {task.input === 'steps' && <StepsInline date={date} value={day?.steps} progress={task.progress} />}
-      {task.input === 'weight' && <BodyInline date={date} field="weightKg" unit="kg" data={data} />}
-      {task.input === 'waist' && <BodyInline date={date} field="waistCm" unit="cm" data={data} />}
+      {task.input === 'weight' && <BodyInline key={data.profile?.units} date={date} field="weightKg" data={data} />}
+      {task.input === 'waist' && <BodyInline date={date} field="waistCm" data={data} />}
       {task.input === 'mobility' && <MobilityInline date={date} value={day?.mobilityMin} target={task.target ?? 10} />}
       {task.link && !task.input && <ChevronRight size={18} className="muted" aria-hidden="true" />}
     </div>
@@ -180,13 +181,18 @@ function StepsInline({ date, value, progress }: { date: ISODate; value?: number;
   );
 }
 
-function BodyInline({ date, field, unit, data }: { date: ISODate; field: 'weightKg' | 'waistCm'; unit: string; data: Data }) {
+function BodyInline({ date, field, data }: { date: ISODate; field: 'weightKg' | 'waistCm'; data: Data }) {
+  // Weight is typed in the chosen unit and stored in kg; the waist stays in cm.
+  const u = unitsOf(data.profile);
+  const isWeight = field === 'weightKg';
   const today = live(data.body).find((b) => b.date === date && b[field] != null);
-  const [v, setV] = useState<number | undefined>(today?.[field]);
+  const stored = today?.[field];
+  const initial = stored == null ? undefined : isWeight ? u.show(stored) : stored;
+  const [v, setV] = useState<number | undefined>(initial);
   return (
     <div className="inline">
-      <NumInput value={v} onChange={setV} unit={unit} label={field === 'weightKg' ? 'Weight' : 'Waist'} />
-      <button className="btn small" disabled={v == null || v === today?.[field]} onClick={() => void logBodyToday(date, { [field]: v })}>
+      <NumInput value={v} onChange={setV} unit={isWeight ? u.label : 'cm'} label={isWeight ? 'Weight' : 'Waist'} />
+      <button className="btn small" disabled={v == null || v === initial} onClick={() => void logBodyToday(date, { [field]: isWeight ? u.fromDisplay(v as number) : v })}>
         OK
       </button>
     </div>

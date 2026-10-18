@@ -8,9 +8,10 @@ import type { Data } from '../engine/model';
 import { live } from '../engine/model';
 import { pausesOf, realDateOf } from '../engine/position';
 import { sessionTone } from '../engine/readiness';
-import { bodyFatSeries, bodyFatTargets, e1rmSeries, exerciseNames, leanSeries, personalRecords, phaseBands, standardValues, targetSeries, weightAverageSeries, workingWeightSeries } from '../engine/stats';
+import { bodyFatSeries, bodyFatTargets, e1rmSeries, exerciseNames, leanSeries, personalRecords, phaseBands, standardText, standardValues, targetSeries, weightAverageSeries, workingWeightSeries, type Pt } from '../engine/stats';
 import { trophies } from '../engine/trophies';
 import type { DayView } from '../engine/today';
+import { unitsOf, type Units } from '../engine/units';
 import { LIFTS, PLAN_START, ROAD_WEEKS, SEASONS, STAT_LIFTS, STEPS_GOAL, TPL_TONE } from '../plan';
 import { STANDARDS } from '../plan/content';
 import type { ISODate, LiftKey } from '../plan/types';
@@ -18,6 +19,9 @@ import { BarChart, LineChart } from '../ui/charts';
 import { Card, Chip, Empty, Runes, Seg, SectionTitle, cx } from '../ui/kit';
 
 type Range = '12w' | 'year' | 'all';
+
+/** Chart points are stored in kg; draw them in the chosen unit. */
+const inUnit = (pts: Pt[], u: Units): Pt[] => (u.unit === 'kg' ? pts : pts.map((p) => ({ ...p, y: u.toDisplay(p.y) })));
 
 export function Stats({ data, view }: ScreenProps) {
   const [range, setRange] = useState<Range>('12w');
@@ -74,11 +78,12 @@ function Weight({ data, from, to, today }: { data: Data; from: ISODate; to: ISOD
   const avg = useMemo(() => weightAverageSeries(from, today, data), [data, from, today]);
   const target = useMemo(() => targetSeries(from, to, data), [data, from, to]);
   const bands = useMemo(() => phaseBands(from, to, data), [data, from, to]);
+  const u = unitsOf(data.profile);
   return (
     <section className="section">
       <SectionTitle>Weight</SectionTitle>
       <Card>
-        <LineChart series={[{ name: '7-day average', tone: 'ember', points: avg }, { name: 'Plan target', tone: 'ash', points: target, dashed: true }]} bands={bands} unit=" kg" from={from} to={to} format={(v) => fmtKg(round1(v))} />
+        <LineChart series={[{ name: '7-day average', tone: 'ember', points: inUnit(avg, u) }, { name: 'Plan target', tone: 'ash', points: inUnit(target, u), dashed: true }]} bands={bands} unit={` ${u.label}`} from={from} to={to} format={(v) => fmtKg(round1(v))} />
         <div className="legend" style={{ marginTop: 4 }}>
           <span className="t-frost"><i />Cut</span>
           <span className="t-gold"><i />Hold or keep</span>
@@ -95,6 +100,7 @@ function BodyFat({ data, from, to }: { data: Data; from: ISODate; to: ISODate })
   const points = bodyFatSeries(data);
   const targets = bodyFatTargets(data).filter((p) => p.x >= from && p.x <= to);
   const { lean, ffmi } = leanSeries(data);
+  const u = unitsOf(data.profile);
   return (
     <section className="section">
       <SectionTitle>Body fat and lean mass</SectionTitle>
@@ -105,7 +111,7 @@ function BodyFat({ data, from, to }: { data: Data; from: ISODate; to: ISODate })
         <div className="grid2">
           <Card>
             <div className="label">Lean mass</div>
-            <LineChart series={[{ name: 'Lean kg', tone: 'moss', points: lean, dots: true }]} unit=" kg" height={120} />
+            <LineChart series={[{ name: `Lean ${u.label}`, tone: 'moss', points: inUnit(lean, u), dots: true }]} unit={` ${u.label}`} height={120} />
           </Card>
           <Card>
             <div className="label">FFMI</div>
@@ -120,6 +126,7 @@ function BodyFat({ data, from, to }: { data: Data; from: ISODate; to: ISODate })
 function Strength({ data }: { data: Data }) {
   const [lift, setLift] = useState<LiftKey>('bench');
   const { tests, sessions } = e1rmSeries(lift, data);
+  const u = unitsOf(data.profile);
   return (
     <section className="section">
       <SectionTitle>Estimated 1RM</SectionTitle>
@@ -129,7 +136,7 @@ function Strength({ data }: { data: Data }) {
             <button key={l} className={cx('chip', lift === l ? 't-ember solid' : 'plain')} onClick={() => setLift(l)}>{LIFTS[l].short}</button>
           ))}
         </div>
-        <LineChart series={[{ name: 'From sessions', tone: 'ember', points: sessions }, { name: 'Tests', tone: 'gold', points: tests, scatter: true }]} unit=" kg" format={(v) => fmtKg(round1(v))} />
+        <LineChart series={[{ name: 'From sessions', tone: 'ember', points: inUnit(sessions, u) }, { name: 'Tests', tone: 'gold', points: inUnit(tests, u), scatter: true }]} unit={` ${u.label}`} format={(v) => fmtKg(round1(v))} />
         <div className="tiny muted">Hollow dots are unverified benchmarks.</div>
       </Card>
     </section>
@@ -140,6 +147,7 @@ function WorkingWeight({ data }: { data: Data }) {
   const names = exerciseNames(data);
   const [name, setName] = useState<string>(names[0] ?? '');
   const pts = name ? workingWeightSeries(name, data) : [];
+  const u = unitsOf(data.profile);
   return (
     <section className="section">
       <SectionTitle>Working weight</SectionTitle>
@@ -151,7 +159,7 @@ function WorkingWeight({ data }: { data: Data }) {
             <select className="input" value={name} onChange={(e) => setName(e.target.value)} aria-label="Exercise" style={{ marginBottom: 8 }}>
               {names.map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
-            <LineChart series={[{ name, tone: 'moss', points: pts, dots: true }]} bands={pts.length ? phaseBands(pts[0].x, pts[pts.length - 1].x, data) : []} unit=" kg" />
+            <LineChart series={[{ name, tone: 'moss', points: inUnit(pts, u), dots: true }]} bands={pts.length ? phaseBands(pts[0].x, pts[pts.length - 1].x, data) : []} unit={` ${u.label}`} format={(v) => fmtKg(round1(v))} />
             <div className="tiny muted">Gold dots: hard. Hollow: assumed from the suggestion.</div>
           </>
         )}
@@ -162,6 +170,7 @@ function WorkingWeight({ data }: { data: Data }) {
 
 function Records({ data }: { data: Data }) {
   const prs = personalRecords(data).slice(0, 12);
+  const u = unitsOf(data.profile);
   return (
     <section className="section">
       <SectionTitle>Personal records</SectionTitle>
@@ -171,8 +180,8 @@ function Records({ data }: { data: Data }) {
           <div key={i} className="list-row">
             <Trophy size={18} color="var(--gold)" />
             <div className="grow">
-              <div style={{ fontWeight: 600 }}>{LIFTS[p.lift].short} · {fmtKg(round1(p.e1rm))} kg</div>
-              <div className="tiny muted">{formatMedium(p.date)} · {p.source === 'test' ? 'tested' : 'from a session'}{p.prev ? ` · was ${fmtKg(round1(p.prev))}` : ''}</div>
+              <div style={{ fontWeight: 600 }}>{LIFTS[p.lift].short} · {u.w(p.e1rm, 1)}</div>
+              <div className="tiny muted">{formatMedium(p.date)} · {p.source === 'test' ? 'tested' : 'from a session'}{p.prev ? ` · was ${u.w(p.prev, 1)}` : ''}</div>
             </div>
           </div>
         ))}
@@ -184,6 +193,7 @@ function Records({ data }: { data: Data }) {
 function StandardsBars({ data, today, year }: { data: Data; today: ISODate; year: number }) {
   const v = standardValues(today, data);
   const values: Record<string, number | null> = { ohp: v.ohp, pullup3: v.pullup3, farmer: v.farmer, neck: v.neck, waistHeight: v.waistHeight, zone2: v.zone2 };
+  const u = unitsOf(data.profile);
   return (
     <section className="section">
       <SectionTitle>Standards</SectionTitle>
@@ -197,14 +207,14 @@ function StandardsBars({ data, today, year }: { data: Data; today: ISODate; year
             <div key={s.key} style={{ padding: '8px 0', borderBottom: '1px solid rgba(47,53,60,.6)' }}>
               <div className="bar-row">
                 <span className="small" style={{ fontWeight: 600 }}>{s.name}</span>
-                <span className="small num">{cur != null ? (s.key === 'waistHeight' ? cur.toFixed(2) : fmtKg(round1(cur))) : extra ?? '·'}</span>
+                <span className="small num">{cur != null ? (s.key === 'waistHeight' ? cur.toFixed(2) : /kg/.test(s.unit) ? u.w(cur, 1) : fmtKg(round1(cur))) : extra ?? '·'}</span>
               </div>
               {target != null && (
                 <div className={cx('bar', pct >= 1 ? 't-moss' : 't-gold')} style={{ marginTop: 4 }}>
                   <i style={{ width: `${pct * 100}%` }} />
                 </div>
               )}
-              <div className="tiny muted" style={{ marginTop: 2 }}>Y1 {s.y1} · Y2 {s.y2} · Goal {s.goal}</div>
+              <div className="tiny muted" style={{ marginTop: 2 }}>Y1 {standardText(s, 'y1', u)} · Y2 {standardText(s, 'y2', u)} · Goal {standardText(s, 'goal', u)}</div>
             </div>
           );
         })}

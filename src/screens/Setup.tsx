@@ -3,16 +3,17 @@ import { ArrowLeft, ArrowRight, CloudDownload } from 'lucide-react';
 import { newId, put, setDevice } from '../db/store';
 import { todayISO } from '../engine/dates';
 import type { BfSource } from '../engine/model';
+import { unitsOf, type Unit } from '../engine/units';
 import { PLAN_START } from '../plan';
 import { DEFAULT_RULES } from '../plan/content';
 import type { LiftKey } from '../plan/types';
 import { restoreNow } from '../sync/backup';
 import { friendly } from '../sync/github';
 import { toast } from '../state/hooks';
-import { Card, Field, NumInput, Runes, Seg } from '../ui/kit';
+import { Card, Field, NumInput, Runes, Seg, UnitToggle } from '../ui/kit';
 import { TOKEN_URL } from './Settings';
 
-const PLAN_GOAL = 'About 89 kg at about 15% body fat with a strong yoke (traps, shoulders, upper back), around autumn 2029. Calm, honest, trusted.';
+const planGoal = (unit: Unit) => `About ${unitsOf({ units: unit }).around(89)} at about 15% body fat with a strong yoke (traps, shoulders, upper back), around autumn 2029. Calm, honest, trusted.`;
 const BENCHMARKS: { lift: LiftKey; label: string }[] = [
   { lift: 'bench', label: 'Bench press' },
   { lift: 'squat', label: 'Back squat' },
@@ -24,6 +25,7 @@ const BENCHMARKS: { lift: LiftKey; label: string }[] = [
 export function Setup() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
+  const [unit, setUnit] = useState<Unit>('kg');
   const [height, setHeight] = useState<number | undefined>();
   const [birth, setBirth] = useState<number | undefined>();
   const [weight, setWeight] = useState<number | undefined>();
@@ -32,13 +34,24 @@ export function Setup() {
   const [waist, setWaist] = useState<number | undefined>();
   const [maxes, setMaxes] = useState<Partial<Record<LiftKey, number>>>({});
   const [injuries, setInjuries] = useState('');
-  const [goal, setGoal] = useState(PLAN_GOAL);
+  const [goal, setGoal] = useState(() => planGoal('kg'));
   const [rules, setRules] = useState(DEFAULT_RULES);
   const [user, setUser] = useState('');
   const [repo, setRepo] = useState('ragnarok-data');
   const [token, setToken] = useState('');
   const [busy, setBusy] = useState(false);
   const today = todayISO();
+  const u = unitsOf({ units: unit });
+
+  /** Switching unit mid-setup converts what was already typed. */
+  const changeUnit = (next: Unit) => {
+    const to = unitsOf({ units: next });
+    const conv = (v?: number) => (v == null ? v : to.show(u.fromDisplay(v)));
+    setWeight(conv(weight));
+    setMaxes(Object.fromEntries(Object.entries(maxes).map(([k, v]) => [k, conv(v)])));
+    if (goal === planGoal(unit)) setGoal(planGoal(next));
+    setUnit(next);
+  };
 
   const finish = async () => {
     setBusy(true);
@@ -49,10 +62,11 @@ export function Setup() {
     }
     for (const b of BENCHMARKS) {
       const v = maxes[b.lift];
-      if (v) await put('maxes', { id: newId(), date: today, lift: b.lift, weightKg: v, reps: 1, e1rm: v, source: 'benchmark' });
+      const kg = v ? u.fromDisplay(v) : 0;
+      if (kg) await put('maxes', { id: newId(), date: today, lift: b.lift, weightKg: kg, reps: 1, e1rm: kg, source: 'benchmark' });
     }
-    if (weight != null || bf != null || waist != null) await put('body', { id: newId(), date: today, weightKg: weight, bodyFatPct: bf, bfSource: bf != null ? bfSrc : undefined, waistCm: waist });
-    await put('profile', { id: 'me', name: name.trim() || 'Me', heightCm: height, birthYear: birth, goal, injuries, rules, startDate: PLAN_START, units: 'kg', dumbbellStep: 2, safetyBar: false, beltSquat: false });
+    if (weight != null || bf != null || waist != null) await put('body', { id: newId(), date: today, weightKg: weight != null ? u.fromDisplay(weight) : undefined, bodyFatPct: bf, bfSource: bf != null ? bfSrc : undefined, waistCm: waist });
+    await put('profile', { id: 'me', name: name.trim() || 'Me', heightCm: height, birthYear: birth, goal, injuries, rules, startDate: PLAN_START, units: unit, dumbbellStep: 2, safetyBar: false, beltSquat: false });
     window.location.hash = '#/today';
   };
 
@@ -108,6 +122,12 @@ export function Setup() {
                 <Field label="Height"><NumInput value={height} onChange={setHeight} unit="cm" label="Height" /></Field>
                 <Field label="Birth year"><NumInput value={birth} onChange={setBirth} label="Birth year" /></Field>
               </div>
+              <Field group label="Weights in">
+                <div className="row between">
+                  <UnitToggle unit={unit} onChange={changeUnit} />
+                  <span className="tiny muted">Change any time with the kg / lb switch at the top.</span>
+                </div>
+              </Field>
               {nav(!!name.trim())}
             </div>
           </Card>
@@ -117,7 +137,7 @@ export function Setup() {
             <div className="stack">
               <div className="label">Body now</div>
               <div className="grid2">
-                <Field label="Weight"><NumInput value={weight} onChange={setWeight} unit="kg" label="Weight" /></Field>
+                <Field label="Weight"><NumInput value={weight} onChange={setWeight} unit={u.label} label="Weight" /></Field>
                 <Field label="Waist (optional)"><NumInput value={waist} onChange={setWaist} unit="cm" label="Waist at the navel" /></Field>
               </div>
               <div className="grid2">
@@ -135,7 +155,7 @@ export function Setup() {
               <div className="tiny muted">Shown as unverified until a real 3RM test replaces them. Weighted pull-up is tested in M2.</div>
               {BENCHMARKS.map((b) => (
                 <Field key={b.lift} label={b.label}>
-                  <NumInput value={maxes[b.lift]} onChange={(v) => setMaxes({ ...maxes, [b.lift]: v })} unit="kg" label={`${b.label} 1RM`} />
+                  <NumInput value={maxes[b.lift]} onChange={(v) => setMaxes({ ...maxes, [b.lift]: v })} unit={u.label} label={`${b.label} 1RM`} />
                 </Field>
               ))}
               {nav()}

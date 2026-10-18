@@ -10,7 +10,7 @@ import { backupNow, onBackupStatus, restoreNow } from '../sync/backup';
 import { checkAccess, friendly } from '../sync/github';
 import { hashPin } from '../security/pin';
 import { toast } from '../state/hooks';
-import { Card, Chip, Field, NumInput, Seg, SectionTitle, Toggle } from '../ui/kit';
+import { Card, Chip, Field, NumInput, Seg, SectionTitle, Toggle, UnitToggle } from '../ui/kit';
 
 export const TOKEN_URL =
   'https://github.com/settings/personal-access-tokens/new?name=Ragnarok%20backup&description=Lets%20Ragnarok%20back%20up%20to%20your%20private%20repository.&expires_in=none&contents=write';
@@ -92,6 +92,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
 }
 
 function GymCard({ profile }: { profile: Profile }) {
+  const lb = profile.units === 'lb';
   return (
     <section className="section">
       <SectionTitle>Gym</SectionTitle>
@@ -99,8 +100,19 @@ function GymCard({ profile }: { profile: Profile }) {
         <Toggle on={profile.safetyBar} onChange={(v) => void saveProfile({ safetyBar: v })} label="Safety-bar squat available" sub="Year 2 squat. Otherwise the back squat stays." />
         <Toggle on={profile.beltSquat} onChange={(v) => void saveProfile({ beltSquat: v })} label="Belt squat available" sub="Year 4 squat. Otherwise the back squat stays." />
         <div className="field" style={{ marginTop: 8 }}>
+          <span>Weight unit</span>
+          <div className="row between">
+            <span className="tiny muted">Every weight converts. Plates round to {lb ? '5 lb' : '2.5 kg'} steps.</span>
+            <UnitToggle unit={lb ? 'lb' : 'kg'} onChange={(units) => void saveProfile({ units })} />
+          </div>
+        </div>
+        <div className="field" style={{ marginTop: 8 }}>
           <span>Dumbbell steps</span>
-          <Seg label="Dumbbell steps" tone="frost" value={profile.dumbbellStep} onChange={(v) => void saveProfile({ dumbbellStep: v })} options={[1, 2, 2.5].map((v) => ({ value: v, label: `${v} kg` }))} />
+          {lb ? (
+            <Seg label="Dumbbell steps" tone="frost" value={profile.dumbbellStepLb ?? 5} onChange={(v) => void saveProfile({ dumbbellStepLb: v })} options={[2.5, 5].map((v) => ({ value: v, label: `${v} lb` }))} />
+          ) : (
+            <Seg label="Dumbbell steps" tone="frost" value={profile.dumbbellStep} onChange={(v) => void saveProfile({ dumbbellStep: v })} options={[1, 2, 2.5].map((v) => ({ value: v, label: `${v} kg` }))} />
+          )}
         </div>
       </Card>
     </section>

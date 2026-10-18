@@ -1,10 +1,11 @@
 import { BLOCKS, LIFTS, ROTATION } from '../plan';
 import type { ISODate, LiftKey } from '../plan/types';
-import { equipmentFor, type Equipment } from '../plan/exercises';
+import { equipmentFor } from '../plan/exercises';
 import { addDays } from './dates';
-import { roundDown, roundNearest, weeklyAverage } from './formulas';
+import { weeklyAverage } from './formulas';
 import type { Data, Feel, MaxLog, WorkingWeight } from './model';
 import { live } from './model';
+import type { Units } from './units';
 
 // ---------------------------------------------------------------- e1RM per lift
 
@@ -117,30 +118,6 @@ export function bodyweightOn(date: ISODate, data: Data): number | null {
   return recent.length ? (recent[recent.length - 1].weightKg as number) : null;
 }
 
-// ---------------------------------------------------------------- weight steps
-
-export function stepFor(eq: Equipment, dumbbellStep: number): number {
-  if (eq === 'dumbbell') return dumbbellStep;
-  if (eq === 'sled') return 5;
-  return 2.5;
-}
-
-export function nextUp(kg: number, eq: Equipment, dumbbellStep: number): number {
-  const step = stepFor(eq, dumbbellStep);
-  return Math.floor(kg / step + 1e-9) * step + step;
-}
-
-/** 5% lighter, rounded to the nearest available weight, and always at least one step down. */
-export function dropFive(kg: number, eq: Equipment, dumbbellStep: number): number {
-  const step = stepFor(eq, dumbbellStep);
-  let target = roundNearest(kg * 0.95, step);
-  if (target >= kg) target = Math.ceil(kg / step - 1e-9) * step - step;
-  return Math.max(0, Math.round(target * 100) / 100);
-}
-
-export const roundFor = (kg: number, eq: Equipment, dumbbellStep: number) =>
-  eq === 'dumbbell' ? roundNearest(kg, dumbbellStep) : roundDown(kg, stepFor(eq, dumbbellStep));
-
 // ---------------------------------------------------------------- accessory progression
 
 export interface Progress {
@@ -167,7 +144,7 @@ export function historyFor(exercise: string, weights: WorkingWeight[], before: I
  * Accessories: up one step after 2 clean sessions in a row at the same weight (top of the range),
  * hold after a hard session, 5% down after 2 hard sessions in a row at the same weight.
  */
-export function accessoryProgress(exercise: string, weights: WorkingWeight[], before: ISODate, dumbbellStep: number): Progress {
+export function accessoryProgress(exercise: string, weights: WorkingWeight[], before: ISODate, u: Units): Progress {
   const eq = equipmentFor(exercise);
   const logs = historyFor(exercise, weights, before);
   const none: Progress = { kg: null, badge: null, deltaKg: 0, reason: null, lastKg: null, lastMark: null };
@@ -175,13 +152,13 @@ export function accessoryProgress(exercise: string, weights: WorkingWeight[], be
   const last = logs[logs.length - 1];
   const prev = logs.length > 1 ? logs[logs.length - 2] : null;
   const base = { lastKg: last.kg, lastMark: last.mark ?? null };
-  const sameWeight = prev && prev.kg === last.kg;
+  const sameWeight = prev && u.same(prev.kg, last.kg);
   if (sameWeight && last.mark === 'clean' && prev.mark === 'clean') {
-    const kg = nextUp(last.kg, eq, dumbbellStep);
+    const kg = u.nextUp(last.kg, eq);
     return { ...base, kg, badge: 'up', deltaKg: kg - last.kg, reason: '2 clean sessions in a row' };
   }
   if (sameWeight && last.mark === 'hard' && prev.mark === 'hard') {
-    const kg = dropFive(last.kg, eq, dumbbellStep);
+    const kg = u.dropFive(last.kg, eq);
     return { ...base, kg, badge: 'down', deltaKg: kg - last.kg, reason: '2 hard sessions in a row: 5% lighter' };
   }
   if (last.mark === 'hard') return { ...base, kg: last.kg, badge: 'hold', deltaKg: 0, reason: 'Last session was hard: hold' };

@@ -2,15 +2,16 @@
 // Numbers here are neutral test values, never real ones.
 import { expect, test, type Page } from '@playwright/test';
 
-async function setup(page: Page) {
+async function setup(page: Page, lb = false) {
   await page.goto('./');
   await page.getByRole('button', { name: 'Set up this phone' }).click();
   await page.getByRole('textbox', { name: 'Name' }).fill('Test');
   await page.getByRole('textbox', { name: 'Height' }).fill('180');
+  if (lb) await page.getByRole('group', { name: 'Weight unit' }).getByRole('button', { name: 'Pounds' }).click();
   await page.getByRole('button', { name: /Next/ }).click();
-  await page.getByRole('textbox', { name: 'Weight' }).fill('85');
+  await page.getByRole('textbox', { name: 'Weight' }).fill(lb ? '187.4' : '85');
   await page.getByRole('button', { name: /Next/ }).click();
-  await page.getByLabel('Bench press 1RM').fill('150');
+  await page.getByLabel('Bench press 1RM').fill(lb ? '330' : '150');
   await page.getByLabel('Back squat 1RM').fill('140');
   await page.getByLabel('Overhead press 1RM').fill('65');
   await page.getByRole('button', { name: /Next/ }).click();
@@ -67,6 +68,34 @@ test('before the start, then a Full Monday with BLADES', async ({ page }) => {
   await page.getByRole('group', { name: 'Bench felt' }).getByRole('button', { name: 'Right' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText(/Session done · RPE 8/)).toBeVisible();
+});
+
+test('the kg / lb switch converts every weight on the spot', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-19T07:30:00'));
+  await setup(page);
+  await checkIn(page, { h: '7', m: '50', score: '84', energy: '4', stress: '2' });
+  const weigh = page.getByRole('textbox', { name: 'Weight' });
+  await expect(weigh).toHaveValue('85');
+  const units = page.locator('.header').getByRole('group', { name: 'Weight unit' });
+  await units.getByRole('button', { name: 'Pounds' }).click();
+  await expect(units.getByRole('button', { name: 'Pounds' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(weigh).toHaveValue('187.4');
+
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Train' }).click();
+  const bench = page.locator('.ex', { hasText: 'Barbell Bench Press' }).getByLabel('Barbell Bench Press weight');
+  await expect(bench).toHaveValue('265'); // 121.5 kg is 267.9 lb, down to a 5 lb step
+  await units.getByRole('button', { name: 'Kilograms' }).click();
+  await expect(bench).toHaveValue('120'); // stored in kg, nothing drifted
+});
+
+test('setup in pounds stores kilos underneath', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-19T07:30:00'));
+  await setup(page, true);
+  await expect(page.locator('.header').getByRole('button', { name: 'Pounds' })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Train' }).click();
+  await expect(page.locator('.ex', { hasText: 'Barbell Bench Press' }).getByLabel('Barbell Bench Press weight')).toHaveValue('265');
+  await page.locator('.header').getByRole('button', { name: 'Kilograms' }).click();
+  await expect(page.locator('.ex', { hasText: 'Barbell Bench Press' }).getByLabel('Barbell Bench Press weight')).toHaveValue('120');
 });
 
 test('short sleep gives Light; back pain 6 gives Recovery', async ({ page }) => {

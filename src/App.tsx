@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Brain, ChartColumn, ClipboardList, Dumbbell, MessageCircle, Sun, X } from 'lucide-react';
 import { startAutoBackup, WARN_MS } from './sync/backup';
 import { syncReadiness } from './state/actions';
-import { closeAsk, go, openAsk, stopRest, useAsk, useData, useDay, useDevice, useRest, useRoute, useToast, useToday } from './state/hooks';
-import { cx } from './ui/kit';
+import { closeAsk, go, openAsk, stopRest, toast, useAsk, useData, useDay, useDevice, useRest, useRoute, useToast, useToday } from './state/hooks';
+import { cx, UnitToggle } from './ui/kit';
+import { saveProfile } from './db/store';
 import { Today } from './screens/Today';
 import { Train } from './screens/Train';
 import { Mind } from './screens/Mind';
@@ -79,6 +80,7 @@ export function App() {
           <img src="icons/emblem.svg" alt="" width={40} height={40} />
         </button>
         <h1>{TITLES[tab] ?? 'Ragnarok'}</h1>
+        <UnitToggle compact unit={data.profile.units === 'lb' ? 'lb' : 'kg'} onChange={(units) => void saveProfile({ units }).then(() => toast(units === 'lb' ? 'Pounds: every weight converted' : 'Kilos: every weight converted'))} />
         {backupOld && (
           <button className="chip t-ember" onClick={() => go('settings/backup')}>
             Backup
