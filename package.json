@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@fontsource/cinzel": "5.2.8",
+    "@fontsource/gfs-didot": "5.2.8",
     "@fontsource/hanken-grotesk": "5.2.8",
     "@fontsource/noto-sans-runic": "5.2.6",
     "dexie": "4.0.11",

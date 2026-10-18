@@ -16,7 +16,7 @@ import type { ISODate } from '../plan/types';
 import { put } from '../db/store';
 import { go, toast } from '../state/hooks';
 import { copyText, openClaude } from '../ui/clipboard';
-import { Card, Chip, Fold, Ring, Runes, Seg, SectionTitle, Sheet, cx } from '../ui/kit';
+import { Card, Chip, cx, Fold, Maxim, Ring, Runes, SectionTitle, Seg, Sheet } from '../ui/kit';
 
 export function Mind({ data, view, route }: ScreenProps) {
   const { pos } = view;
@@ -32,6 +32,7 @@ export function Mind({ data, view, route }: ScreenProps) {
 
   return (
     <div className="stack">
+      <Maxim />
       <Card tone={s.c} toned>
         <div className="row between" style={{ alignItems: 'flex-start' }}>
           <div className="grow">

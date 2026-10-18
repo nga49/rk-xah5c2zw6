@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Delete } from 'lucide-react';
 import type { Profile } from '../engine/model';
 import { checkPin } from '../security/pin';
-import { cx, Embers } from '../ui/kit';
+import { cx, Embers, Laurel } from '../ui/kit';
 
 export function Lock({ profile, onUnlock }: { profile: Profile; onUnlock: () => void }) {
   const [pin, setPin] = useState('');
@@ -26,8 +26,11 @@ export function Lock({ profile, onUnlock }: { profile: Profile; onUnlock: () => 
       <div className="hero-art" aria-hidden="true" />
       <Embers n={12} />
       <main className="main" style={{ paddingBottom: 40 }}>
-        <div className="hero" style={{ paddingTop: 'max(10vh, 48px)' }}>
-          <img src="icons/mark.svg" alt="" width={96} height={96} />
+        <div className="hero" style={{ paddingTop: 'max(7vh, 32px)' }}>
+          <div className="crest">
+            <Laurel className="laurel" size={168} />
+            <img src="icons/mark.svg" alt="" width={92} height={92} />
+          </div>
           <h1 style={{ fontSize: 30 }}>Ragnarok</h1>
         </div>
         <div className="pindots" aria-label={`${pin.length} of 4 digits`}>

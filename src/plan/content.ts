@@ -178,3 +178,7 @@ export const DEFAULT_RULES =
 export const SUNDAY_QUESTIONS = ['What did I carry?', 'Where did I react?', 'What did I build?'];
 
 export const RUNES = 'ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ';
+/** "Ragnarok" spelled in Elder Futhark: raido, ansuz, gebo, naudiz, ansuz, raido, othala, kaunan. */
+export const RUNE_NAME = 'ᚱᚨᚷᚾᚨᚱᛟᚲ';
+/** The Delphic maxim, carved at the temple of Apollo. */
+export const MAXIM = { greek: 'ΓΝΩΘΙ ΣΕΑΥΤΟΝ', english: 'Know thyself' };

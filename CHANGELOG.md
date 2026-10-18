@@ -1,5 +1,15 @@
 # Changelog
 
+## The Greek touch
+
+- Two worlds, as in the story the look draws on: a Spartan's Greek past carried into the Norse North.
+- Greek key (meander) everywhere it frames: a thin frieze under the header, and the dividers now set the name in runes (ᚱᚨᚷᚾᚨᚱᛟᚲ, Ragnarok in Elder Futhark) between two Greek key bands.
+- Panels have Greek fret corners in gold leaf instead of plain brackets.
+- A gold laurel wreath, the Greek prize for victory, around the Omega on the welcome and lock screens, and on every earned trophy and personal record.
+- The Mind tab opens under the Delphic maxim ΓΝΩΘΙ ΣΕΑΥΤΟΝ, "know thyself", set in GFS Didot (Greek Font Society, open font licence, Greek letters only, about 7 KB).
+- The fjord painting now has weathered Doric columns on the shore: two standing under a broken entablature, one snapped, one fallen drum, lit by the ember glow.
+- All drawn from scratch; no game artwork, logos or names used.
+
 ## Forged iron: the Norse look
 
 - A dark Norse look in the spirit of the old-gods era of the war-god games, drawn from scratch: no game names, logos, characters or artwork are used.

@@ -10,7 +10,7 @@ import type { LiftKey } from '../plan/types';
 import { restoreNow } from '../sync/backup';
 import { friendly } from '../sync/github';
 import { toast } from '../state/hooks';
-import { Card, cx, Embers, Field, NumInput, Runes, Seg, UnitToggle } from '../ui/kit';
+import { Card, cx, Embers, Field, Laurel, NumInput, Runes, Seg, UnitToggle } from '../ui/kit';
 import { TOKEN_URL } from './Settings';
 
 const planGoal = (unit: Unit) => `About ${unitsOf({ units: unit }).around(89)} at about 15% body fat with a strong yoke (traps, shoulders, upper back), around autumn 2029. Calm, honest, trusted.`;
@@ -103,7 +103,14 @@ export function Setup() {
       {step === 0 && <Embers />}
       <main className="main" style={{ paddingBottom: 40 }}>
         <div className={cx('hero', step === 0 && 'tall')}>
-          <img src={step === 0 ? 'icons/mark.svg' : 'icons/emblem.svg'} alt="" width={96} height={96} />
+          {step === 0 ? (
+            <div className="crest">
+              <Laurel className="laurel" size={168} />
+              <img src="icons/mark.svg" alt="" width={92} height={92} />
+            </div>
+          ) : (
+            <img src="icons/emblem.svg" alt="" width={96} height={96} />
+          )}
           <h1>Ragnarok</h1>
           <div className="muted small" style={{ marginTop: 8, textShadow: '0 1px 2px rgba(0, 0, 0, 0.9)' }}>{step === 0 ? 'Training and mindset, one day at a time.' : step === 9 ? 'Restore on a new phone' : `Setup · ${step} of 5`}</div>
         </div>

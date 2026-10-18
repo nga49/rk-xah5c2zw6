@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Lock, Trophy } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import type { ScreenProps } from '../App';
 import { addDays, formatMedium, formatSleep, formatShort, startOfWeek } from '../engine/dates';
 import { fmtKg, round1 } from '../engine/formulas';
@@ -16,7 +16,7 @@ import { LIFTS, PLAN_START, ROAD_WEEKS, SEASONS, STAT_LIFTS, STEPS_GOAL, TPL_TON
 import { STANDARDS } from '../plan/content';
 import type { ISODate, LiftKey } from '../plan/types';
 import { BarChart, LineChart } from '../ui/charts';
-import { Card, Chip, Empty, Runes, Seg, SectionTitle, cx } from '../ui/kit';
+import { Card, Chip, Empty, Laurel, Runes, Seg, SectionTitle, cx } from '../ui/kit';
 
 type Range = '12w' | 'year' | 'all';
 
@@ -178,7 +178,7 @@ function Records({ data }: { data: Data }) {
         {prs.length === 0 && <Empty>Your first record is waiting.</Empty>}
         {prs.map((p, i) => (
           <div key={i} className="list-row">
-            <Trophy size={18} color="var(--gold)" />
+            <Laurel size={26} style={{ color: 'var(--gold)', flex: 'none' }} />
             <div className="grow">
               <div style={{ fontWeight: 600 }}>{LIFTS[p.lift].short} · {u.w(p.e1rm, 1)}</div>
               <div className="tiny muted">{formatMedium(p.date)} · {p.source === 'test' ? 'tested' : 'from a session'}{p.prev ? ` · was ${u.w(p.prev, 1)}` : ''}</div>
@@ -348,7 +348,7 @@ function Trophies({ data, today }: { data: Data; today: ISODate }) {
         {[...earned, ...locked.slice(0, Math.max(0, 8 - earned.length))].map((t) => (
           <Card key={t.id} tone={t.tone} tint={!!t.on} style={t.on ? undefined : { opacity: 0.55 }}>
             <div className="row">
-              {t.on ? <Trophy size={20} color="var(--tone)" /> : <Lock size={18} className="muted" />}
+              {t.on ? <Laurel size={28} style={{ color: 'var(--tone)', flex: 'none' }} /> : <Lock size={18} className="muted" />}
               <div className="grow">
                 <div style={{ fontFamily: 'var(--head)', fontSize: 14, color: t.on ? 'var(--tone)' : undefined }}>{t.name}</div>
                 <div className="tiny muted">{t.what}{t.on ? ` · ${formatShort(t.on)}` : ''}</div>

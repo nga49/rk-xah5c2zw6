@@ -2,7 +2,7 @@ import { useEffect, useId, useState, type ReactNode } from 'react';
 import { Bed, Check, ChevronRight, Dumbbell, Feather, Flame, Gauge, Info, Moon, Plane, Shield, X } from 'lucide-react';
 import type { SessionType } from '../engine/model';
 import { sessionTone } from '../engine/readiness';
-import { RUNES } from '../plan/content';
+import { MAXIM, RUNE_NAME } from '../plan/content';
 import type { Tone } from '../plan/types';
 
 export const cx = (...xs: (string | false | null | undefined)[]) => xs.filter(Boolean).join(' ');
@@ -23,11 +23,73 @@ export function Chip({ tone, solid, plain, children, title }: { tone?: Tone; sol
   );
 }
 
+/** Divider: the name in runes, framed by a Greek key on each side. The North and the old world together. */
 export function Runes() {
   return (
     <div className="runes" aria-hidden="true">
-      {RUNES}
+      <i className="key" />
+      <span>{RUNE_NAME}</span>
+      <i className="key" />
     </div>
+  );
+}
+
+/** The Delphic maxim between two Greek key bands, with its translation. */
+export function Maxim() {
+  return (
+    <p className="maxim">
+      <span className="runes">
+        <i className="key" />
+        <span className="greek" lang="grc">{MAXIM.greek}</span>
+        <i className="key" />
+      </span>
+      <span className="tr">{MAXIM.english}</span>
+    </p>
+  );
+}
+
+/** A laurel wreath, the Greek prize for victory: two arcs of leaves, drawn once. */
+const LAUREL = (() => {
+  const cx = 32;
+  const cy = 31;
+  const r = 23;
+  const at = (t: number) => Math.PI / 2 - 0.2 - t * (Math.PI - 0.75);
+  const f = (n: number) => n.toFixed(2);
+  const stems: string[] = [];
+  const leaves: string[] = [];
+  for (const s of [1, -1]) {
+    const pts: string[] = [];
+    for (let i = 0; i <= 40; i++) {
+      const a = at(i / 40);
+      pts.push(`${f(cx + s * r * Math.cos(a))} ${f(cy + r * Math.sin(a))}`);
+    }
+    stems.push(`M${pts.join(' ')}`);
+    const n = 8;
+    for (let i = 0; i <= n; i++) {
+      const t = i === n ? 1 : (i + 0.5) / n;
+      const a = at(t);
+      const x = cx + s * r * Math.cos(a);
+      const y = cy + r * Math.sin(a);
+      const dir = (Math.atan2(-Math.cos(a), s * Math.sin(a)) * 180) / Math.PI;
+      const k = 1 - t * 0.38;
+      const sides = i === n ? [0] : [1, -1];
+      for (const side of sides) leaves.push(`translate(${f(x)} ${f(y)}) rotate(${f(dir + side * s * 36)}) scale(${f(k)})`);
+    }
+  }
+  return { stems: stems.join(' '), leaves };
+})();
+const LEAF = 'M0 0C2.6-2.4 7.6-2.5 10.6 0C7.6 2.5 2.6 2.4 0 0Z';
+
+export function Laurel({ size = 24, className, style }: { size?: number; className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg viewBox="0 0 64 64" width={size} height={size} className={className} style={style} aria-hidden="true">
+      <path d={LAUREL.stems} fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" />
+      <g fill="currentColor">
+        {LAUREL.leaves.map((t) => (
+          <path key={t} d={LEAF} transform={t} />
+        ))}
+      </g>
+    </svg>
   );
 }
 
