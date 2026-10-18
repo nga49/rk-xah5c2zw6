@@ -204,7 +204,7 @@ function StandardsBars({ data, today, year }: { data: Data; today: ISODate; year
           const pct = cur != null && target ? (s.lowerIsBetter ? Math.min(1, target / cur) : Math.min(1, cur / target)) : 0;
           const extra = s.key === 'bench' && v.benchGain != null ? `+${(v.benchGain * 100).toFixed(1)}%` : null;
           return (
-            <div key={s.key} style={{ padding: '8px 0', borderBottom: '1px solid rgba(47,53,60,.6)' }}>
+            <div key={s.key} style={{ padding: '8px 0', borderBottom: '1px solid var(--seam)' }}>
               <div className="bar-row">
                 <span className="small" style={{ fontWeight: 600 }}>{s.name}</span>
                 <span className="small num">{cur != null ? (s.key === 'waistHeight' ? cur.toFixed(2) : /kg/.test(s.unit) ? u.w(cur, 1) : fmtKg(round1(cur))) : extra ?? '·'}</span>

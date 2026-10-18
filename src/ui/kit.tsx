@@ -31,13 +31,30 @@ export function Runes() {
   );
 }
 
+/** Embers drifting up behind the welcome and lock screens. Pure decoration, hidden with reduced motion. */
+export function Embers({ n = 16 }: { n?: number }) {
+  let seed = 29;
+  const r = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+  const list = Array.from({ length: n }, () => ({ x: r() * 100, s: 2 + r() * 3.5, d: 7 + r() * 7, w: -r() * 14, drift: (r() - 0.5) * 120 }));
+  return (
+    <div className="embers" aria-hidden="true">
+      {list.map((e, i) => (
+        <i key={i} style={{ '--x': `${e.x}%`, '--s': `${e.s}px`, '--d': `${e.d}s`, '--w': `${e.w}s`, '--drift': `${e.drift}px` } as React.CSSProperties} />
+      ))}
+    </div>
+  );
+}
+
 export function SectionTitle({ children, right }: { children: ReactNode; right?: ReactNode }) {
   return (
     <div className="section-head">
       <h2 className="h2">
-        <span className="rune" aria-hidden="true">ᛟ</span>
+        <span className="sigil" aria-hidden="true">
+          <span className="rune">ᛟ</span>
+        </span>
         {children}
       </h2>
+      <span className="rule" aria-hidden="true" />
       {right}
     </div>
   );

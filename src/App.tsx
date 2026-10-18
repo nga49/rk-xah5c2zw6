@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { Brain, ChartColumn, ClipboardList, Dumbbell, MessageCircle, Sun, X } from 'lucide-react';
 import { startAutoBackup, WARN_MS } from './sync/backup';
 import { syncReadiness } from './state/actions';
@@ -48,6 +48,13 @@ export function App() {
 
   useEffect(() => startAutoBackup(), []);
 
+  // A new tab opens at its top; deep links such as settings/backup scroll themselves.
+  const tab = route[0];
+  const deep = !!route[1];
+  useLayoutEffect(() => {
+    if (!deep) window.scrollTo(0, 0);
+  }, [tab, deep]);
+
   // Lock again after 5 minutes away.
   useEffect(() => {
     let hiddenAt = 0;
@@ -69,7 +76,6 @@ export function App() {
   if (data.profile.pinHash && !unlocked) return <Lock profile={data.profile} onUnlock={() => setUnlocked(true)} />;
   if (!view) return <div className="app" aria-busy="true" />;
 
-  const tab = route[0];
   const props: ScreenProps = { data, view, device, route, now };
   const backupOld = (!device.lastBackupAt && data.profile.updatedAt && Date.now() - firstUse(data) > WARN_MS) || (device.lastBackupAt != null && Date.now() - device.lastBackupAt > WARN_MS);
 
@@ -98,8 +104,8 @@ export function App() {
         {!(tab in TITLES) && <Today {...props} backupOld={!!backupOld} />}
       </main>
       <RestTimerBar />
-      <button className="fab" onClick={() => openAsk()} aria-label="Ask Claude">
-        <MessageCircle size={20} /> Ask Claude
+      <button className="fab" onClick={() => openAsk()} aria-label="Ask Claude" title="Ask Claude">
+        <MessageCircle size={24} aria-hidden="true" />
       </button>
       <nav className="tabbar" aria-label="Main">
         {TABS.map(({ id, label, Icon }) => (

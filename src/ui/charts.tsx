@@ -15,7 +15,7 @@ export interface Series {
 
 const W = 340;
 const M = { l: 34, r: 8, t: 10, b: 20 };
-const TONE: Record<Tone, string> = { frost: '#84C6E8', ember: '#E35A35', gold: '#D6AC52', moss: '#93B98D', ash: '#8C949C' };
+const TONE: Record<Tone, string> = { frost: '#84C6E8', ember: '#E35A35', gold: '#D6AC52', moss: '#93B98D', ash: '#969089' };
 
 function niceTicks(min: number, max: number, count = 4): number[] {
   const span = max - min || 1;
@@ -115,7 +115,7 @@ export function LineChart({ series, bands = [], refY, height = 170, unit = '', f
         })}
         <text x={M.l} y={H - 5}>{formatShort(dom.x0)}</text>
         <text x={W - M.r} y={H - 5} textAnchor="end">{formatShort(dom.x1)}</text>
-        {hover && <line x1={px(hover)} x2={px(hover)} y1={M.t} y2={H - M.b} stroke="#ECE5D6" strokeOpacity={0.4} />}
+        {hover && <line x1={px(hover)} x2={px(hover)} y1={M.t} y2={H - M.b} stroke="#EFE6D4" strokeOpacity={0.4} />}
       </svg>
       <div className="chart-tip" aria-live="polite">
         {hover ? (

@@ -12,6 +12,7 @@
     "scan": "node scripts/privacy-scan.mjs dist",
     "e2e": "playwright test",
     "icons": "node scripts/make-icons.mjs",
+    "art": "node scripts/make-art.mjs",
     "check": "npm run test && npm run build && npm run scan"
   },
   "dependencies": {

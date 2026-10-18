@@ -3,8 +3,8 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 
-const STONE_DARK = '#0D1013';
-const LINE = '#2F353C';
+const STONE_DARK = '#0C0A09';
+const LINE = '#3A3029';
 
 // A rustic Omega on a 64 x 64 grid: chiseled forged iron in ember red, hand-cut edges,
 // cracks and dents. An original drawing of the Greek letter, not a copy of any game logo.
@@ -135,10 +135,10 @@ const art = `<defs>
 
 const glow = `<radialGradient id="glow" cx="0.5" cy="0.52" r="0.5"><stop offset="0" stop-color="#E35A35" stop-opacity=".28"/><stop offset="1" stop-color="#E35A35" stop-opacity="0"/></radialGradient>`;
 
-const roundedBg = `<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E242B"/><stop offset="1" stop-color="${STONE_DARK}"/></linearGradient>${glow}</defs>
+const roundedBg = `<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#241D19"/><stop offset="1" stop-color="${STONE_DARK}"/></linearGradient>${glow}</defs>
   <rect x="1" y="1" width="62" height="62" rx="13" fill="url(#g)" stroke="${LINE}" stroke-width="1.5"/>
   <rect x="1" y="1" width="62" height="62" rx="13" fill="url(#glow)"/>`;
-const squareBg = `<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E242B"/><stop offset="1" stop-color="${STONE_DARK}"/></linearGradient>${glow}</defs>
+const squareBg = `<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#241D19"/><stop offset="1" stop-color="${STONE_DARK}"/></linearGradient>${glow}</defs>
   <rect width="64" height="64" fill="url(#g)"/>
   <rect width="64" height="64" fill="url(#glow)"/>`;
 

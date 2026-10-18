@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E242B"/><stop offset="1" stop-color="#0D1013"/></linearGradient><radialGradient id="glow" cx="0.5" cy="0.52" r="0.5"><stop offset="0" stop-color="#E35A35" stop-opacity=".28"/><stop offset="1" stop-color="#E35A35" stop-opacity="0"/></radialGradient></defs>
-  <rect x="1" y="1" width="62" height="62" rx="13" fill="url(#g)" stroke="#2F353C" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#241D19"/><stop offset="1" stop-color="#0C0A09"/></linearGradient><radialGradient id="glow" cx="0.5" cy="0.52" r="0.5"><stop offset="0" stop-color="#E35A35" stop-opacity=".28"/><stop offset="1" stop-color="#E35A35" stop-opacity="0"/></radialGradient></defs>
+  <rect x="1" y="1" width="62" height="62" rx="13" fill="url(#g)" stroke="#3A3029" stroke-width="1.5"/>
   <rect x="1" y="1" width="62" height="62" rx="13" fill="url(#glow)"/><g transform="translate(5.760000000000002 5.760000000000002) scale(0.82)"><defs>
     <linearGradient id="om-fill" x1="0" y1="0" x2="0.3" y2="1">
       <stop offset="0" stop-color="#E05A33"/>

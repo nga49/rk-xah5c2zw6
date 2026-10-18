@@ -52,6 +52,7 @@ npm run e2e        # end-to-end on an iPhone-sized viewport (Playwright, Chromiu
 npm run build      # type-check and build to dist/
 npm run scan       # fail if personal data reached dist/
 npm run icons      # redraw the emblem and PWA icons (needs Chromium)
+npm run art        # repaint the fjord background and the grain texture (needs Chromium)
 ```
 
 Optional local fixture for test 12 with real numbers: `tests/private.local.json` (git-ignored, never commit it).
