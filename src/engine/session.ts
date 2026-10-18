@@ -523,7 +523,7 @@ export function buildSession(input: BuildInput): SessionPlan {
   });
 
   const cardio: CardioRx[] = [];
-  if (wd === 0 && mods.type === 'Full') cardio.push({ id: 'cardio:mon', label: 'Zone 2, 20 min', minutes: 20, kind: 'zone2', optional: true, why: 'Optional on Full days' });
+  if (wd === 0 && mods.type === 'Full') cardio.push({ id: 'cardio:mon', label: 'Zone 2, 20 min', minutes: 20, kind: 'zone2', optional: true, why: 'Full days only, talk-test pace' });
   if (wd === 2) {
     const min = ZONE2_MIN[Math.min(4, year)];
     if (mods.intensity === 'light') cardio.push({ id: 'cardio:z2', label: 'Easy, 20 min or a walk', minutes: 20, kind: 'easy', why: 'Light day: capped at 20 min' });

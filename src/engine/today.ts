@@ -3,7 +3,7 @@ import type { ISODate, SessionCode } from '../plan/types';
 import { addDays, formatLong, startOfWeek } from './dates';
 import { buildInsights, heldHabit, type Insight } from './insights';
 import { dueTests, testsForToday, type DueTest } from './maxtests';
-import type { Data } from './model';
+import type { Checkin, Data } from './model';
 import { nutritionCheck, targetsFor, type NutritionCheck, type Targets } from './nutrition';
 import { getPosition, type Position } from './position';
 import { calibrationFor, decide, sleepAverage3, type Calibration, type Decision } from './readiness';
@@ -17,6 +17,7 @@ export interface DayView {
   /** Session planned for today before any offer (after accepted swaps). */
   code: SessionCode | null;
   decision: Decision;
+  checkin?: Checkin;
   session: SessionPlan;
   tests: DueTest[];
   tasks: { training: Task[]; mind: Task[] };
@@ -96,5 +97,5 @@ export function computeDay(date: ISODate, data: Data, now: Date = new Date()): D
     cardio,
     tomorrow: { pos: tomorrowPos, code: tomorrowPos.status === 'active' ? scheduledCode(tomorrowDate, data) : null, tests: dueTests(tomorrowPos, data) },
   });
-  return { date, pos, code, decision, session, tests, tasks, targets, nutrition, insights, offer, calibration, cardio, lines: positionLines(pos) };
+  return { date, pos, code, decision, checkin, session, tests, tasks, targets, nutrition, insights, offer, calibration, cardio, lines: positionLines(pos) };
 }

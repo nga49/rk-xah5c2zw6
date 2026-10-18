@@ -91,7 +91,7 @@ export const STANDARDS: StandardDef[] = [
   { key: 'zone2', name: 'Zone 2, easy', unit: 'min', start: '30 min', y1: '35 min', y2: '40 min', goal: '45 min', targets: { y1: 35, y2: 40, goal: 45 }, logged: true },
 ];
 
-// ---------------------------------------------------------------- Kratos reference (6.9)
+// ---------------------------------------------------------------- reference cards (6.9)
 
 export const ARC: { stage: string; tone: Tone; lines: string[] }[] = [
   { stage: 'Closed', tone: 'ash', lines: ['Grieves alone', 'Hides who he is'] },

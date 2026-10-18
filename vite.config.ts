@@ -74,6 +74,7 @@ export default defineConfig({
     target: 'es2020',
     sourcemap: false,
     assetsInlineLimit: 0,
+    chunkSizeWarningLimit: 800,
   },
   test: {
     environment: 'node',
