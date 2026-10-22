@@ -9,7 +9,7 @@ import { FLAG_TIER, phaseView, TIER_ADVICE, type FlagTier, type PhaseView } from
 import { activeInjuries, injuryName, standingLimits, type ActiveInjury } from './state';
 import { contextSources } from './registry';
 import { rxFor } from './rx';
-import { tagsFor, type ExerciseTags } from './tags';
+import { tagsFor, type ExerciseTags, type Kit } from './tags';
 
 export interface AreaRule {
   injury: Injury;
@@ -45,6 +45,12 @@ export interface Ctx {
   block: RecordOf<'recoveryBlock'> | null;
   /** Why Guardian fills are off today, if they are. */
   noFill: string | null;
+  /** An easier day (for example back from travel): Moderate instead of Full. */
+  ease: string | null;
+  /** Kit available today (null: a full gym), its label, and whether plan rows must fit it. */
+  kit: Set<Kit> | null;
+  kitLabel: string | null;
+  enforceKit: boolean;
   /** First open red flag, worded for the Guardian. */
   redFlag: string | null;
   lowerLimb: boolean;
@@ -75,10 +81,20 @@ function build(date: ISODate, data: Data): Ctx | null {
   const longTerm = standingLimits(date, data);
   let block = acceptedBlock(date, data);
   let noFill: string | null = null;
+  let ease: string | null = null;
+  let kit: Set<Kit> | null = null;
+  let kitLabel: string | null = null;
+  let enforceKit = false;
+  let extraActive = false;
   for (const x of contextSources) {
     const e = x(date, data);
     if (e.block) block = e.block;
     if (e.noFill && !noFill) noFill = e.noFill;
+    if (e.ease && !ease) ease = e.ease;
+    if (e.kit) kit = e.kit;
+    if (e.kitLabel) kitLabel = e.kitLabel;
+    if (e.enforceKit) enforceKit = true;
+    if (e.active) extraActive = true;
   }
   const clinician = new Map<Movement, string>();
   const addBlocked = (i: Injury, moves: Movement[] | undefined, until: ISODate | undefined, by: string) => {
@@ -122,11 +138,11 @@ function build(date: ISODate, data: Data): Ctx | null {
       }
     }
   }
-  if (!active.length && !clinician.size && !block && !noFill && !limits.some((l) => l.applyToPlan)) return null;
+  if (!active.length && !clinician.size && !block && !noFill && !ease && !extraActive && !limits.some((l) => l.applyToPlan)) return null;
   if (redFlag) noFill = 'an open red flag';
   else if (block) noFill ??= 'a recovery block is on';
   return {
-    date, stop, areas, clinician, limits, block, noFill, redFlag,
+    date, stop, areas, clinician, limits, block, noFill, ease, kit, kitLabel, enforceKit, redFlag,
     lowerLimb: areas.some((a) => isLowerLimb(a.region)),
     lowerBack: areas.some((a) => a.region === 'lower-back') || limits.some((l) => l.applyToPlan && l.region === 'lower-back'),
     active,

@@ -2,7 +2,7 @@
 // Nothing active on the date: the original session, untouched. Any error: a coarse, safe fallback,
 // never the unprotected original.
 import { LOWER_BODY_SESSIONS } from '../plan';
-import { buildSessionCore, type BuildInput, type SessionPlan } from '../engine/session';
+import { buildSessionCore, modsForType, type BuildInput, type SessionPlan } from '../engine/session';
 import { filterSession, finish, preBuild, stopPlan, TRAVEL_KIT } from './adapt';
 import { constraintsOn, type Ctx } from './constraints';
 import { applyFills, weekPlan } from './fill';
@@ -10,8 +10,9 @@ import { remainingWeeks } from './phases';
 import { preventionLines } from './prevention';
 import { noSignals, provideSignals, type GoalSignals } from './signals';
 import { goalLiftsOf } from './lifts';
-// Registers the wellness signals (fills off on watch or flag, Today cards).
+// Registers the wellness signals (fills off on watch or flag, Today cards) and travel and gym context.
 import './wellness';
+import { smartTravelPlan, travelLine, tripOn } from './travel';
 
 export type Core = (input: BuildInput) => SessionPlan;
 
@@ -29,8 +30,12 @@ export function recoveryHook(input: BuildInput, core: Core): SessionPlan {
 function adapt(input: BuildInput, core: Core, ctx: Ctx): SessionPlan {
   if (ctx.stop) return stopPlan(input, core, ctx);
   const pre = preBuild(input, ctx);
-  const plan = core(pre);
-  const kit = pre.mods.travel ? TRAVEL_KIT : null;
+  const smart = input.data.recovery?.settings.smartTravel === true;
+  // Smart travel with a full gym on the trip: the normal session. Otherwise the hotel session, yoke first.
+  const fullGymTrip = smart && pre.mods.travel && tripOn(input.date, input.data)?.kit === 'full';
+  const built = core(fullGymTrip ? { ...pre, mods: { ...modsForType('Full'), type: pre.mods.type } } : pre);
+  const plan = smart && pre.mods.travel && !fullGymTrip ? smartTravelPlan(built, input.date, input.data) : built;
+  const kit = ctx.kit ?? (pre.mods.travel ? TRAVEL_KIT : null);
   const f = filterSession(plan, pre, ctx, kit);
   const week = weekPlan(input.date, input.data, core);
   const filled = applyFills(f.plan, pre, ctx, week);
@@ -56,7 +61,8 @@ function coarse(input: BuildInput, core: Core, ctx: Ctx): SessionPlan {
 function engineSignals(date: string, data: BuildInput['data']): GoalSignals {
   const ctx = constraintsOn(date, data);
   const prevention = preventionLines(date, data);
-  if (!ctx) return { ...noSignals(), prevention };
+  const travel = travelLine(date, data);
+  if (!ctx) return { ...noSignals(), prevention, tradeoffs: travel ? [travel] : [] };
   const week = weekPlan(date, data, buildSessionCore);
   const goal = new Set(goalLiftsOf(date, data));
   const pausedLifts = new Map([...week.pausedLifts].filter(([l]) => goal.has(l)));
@@ -67,6 +73,7 @@ function engineSignals(date: string, data: BuildInput['data']): GoalSignals {
     const legs = [...week.paused.keys()].join(', ');
     tradeoffs.push(fills ? `${legs} rest this week so the injury can heal; ${fills} sets moved to goal priorities, yoke first.` : `${legs} rest this week so the injury can heal.`);
   }
+  if (travel) tradeoffs.push(travel);
   if (ctx.block) tradeoffs.push(`Recovery block: lighter sessions now so fatigue clears. Pushing through it would cost more training later.`);
   const weeks = pausedLifts.size ? ctx.active.map(remainingWeeks).reduce<[number, number] | null>((a, b) => (!a ? b : [Math.max(a[0], b[0]), Math.max(a[1], b[1])]), null) : null;
   return {

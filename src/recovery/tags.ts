@@ -202,6 +202,15 @@ export const EXERCISE_TAGS: Record<string, ExerciseTags> = {
   'Front-rack Kettlebell Carry': carry(['Core', 'Forearms'], ['Traps', 'Front delts'], ['shoulder'], []),
   'Single-arm Overhead Carry': carry(['Core', 'Forearms'], ['Traps', 'Front delts', 'Side delts'], ['shoulder', 'upper-back'], ['overhead'], { unilateral: true }),
 
+  // ---------------------------------------------------------------- smart travel kits (yoke first)
+  'Backpack Shrug': t(['Traps'], ['Forearms'], ['upper-back', 'neck', 'shoulder'], ['forearm', 'wrist-hand', 'lower-back'], ['shrug', 'grip'], { spinalLoad: 'low' }),
+  'Backpack Lateral Raise': lateral(['bodyweight']),
+  'Prone Y-Raise, bodyweight': yRaise(['bodyweight'], { supported: true }),
+  'Neck Isometric Holds': t(['Neck'], [], ['neck'], ['upper-back'], ['neck'], { supported: true }),
+  'Band Shrug': t(['Traps'], ['Forearms'], ['upper-back', 'neck', 'shoulder'], ['forearm', 'wrist-hand'], ['shrug'], { kit: ['bands'] }),
+  'Band Lateral Raise': lateral(['bands']),
+  'Band Face Pull': rearDelt(['bands']),
+
   // ---------------------------------------------------------------- core
   'Hanging Leg Raise': t(['Core'], ['Forearms'], ['abdomen', 'hip'], ['quad', 'groin', 'lower-back', 'shoulder', 'forearm', 'wrist-hand'], ['hip-flexion', 'spinal-flexion', 'overhead', 'grip'], { kit: ['pullup-bar'], regressions: ["Captain's Chair Knee Raise", 'Reverse Crunch'] }),
   "Captain's Chair Knee Raise": t(['Core'], [], ['abdomen', 'hip'], ['quad', 'groin', 'lower-back', 'shoulder', 'elbow'], ['hip-flexion', 'spinal-flexion'], { kit: ['machines'], regressions: ['Reverse Crunch'] }),

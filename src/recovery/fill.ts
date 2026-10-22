@@ -12,6 +12,7 @@ import type { ISODate, LiftKey } from '../plan/types';
 import { kitOk, TRAVEL_KIT, filterSession, preBuild, type KitSet } from './adapt';
 import { constraintsOn, judge, unsafeFill, type Ctx } from './constraints';
 import { FILL } from './rules';
+import { travelling } from './travel';
 import { tagsFor } from './tags';
 import { addSession, FILL_PRIORITY, floorFor, FLOOR, musclesOf, type Core, type GoalMuscle, type MuscleCount } from './volume';
 import { accessoryProgress } from '../engine/loads';
@@ -88,8 +89,8 @@ function buildWeek(monday: ISODate, data: Data, core: Core): WeekPlan {
       days.push({ date, ctx, original: null, adapted: null, removed: 0, kit: null });
       continue;
     }
-    const travel = !!data.days.get(date)?.travelMode;
-    const kit = travel ? TRAVEL_KIT : null;
+    const travel = travelling(date, data);
+    const kit = ctx?.kit ?? (travel ? TRAVEL_KIT : null);
     const input: BuildInput = { date, code, pos, mods: modsForType(travel ? 'Travel' : 'Full'), data };
     const o = core(input);
     addSession(original, o.exercises);

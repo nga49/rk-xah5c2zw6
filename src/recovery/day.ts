@@ -17,6 +17,7 @@ import { FLAG_LABEL, isLowerLimb, PHASE_WORD } from './model';
 import { FLAG_TIER, TIER_ADVICE } from './phases';
 import { insightSources } from './registry';
 import { rxDue, rxFor } from './rx';
+import { flightOn, travelDecision } from './travel';
 import { activeInjuries, checkedInToday, injuryName, type ActiveInjury } from './state';
 
 export interface RecoveryDay {
@@ -158,20 +159,26 @@ export function recoveryDay(date: ISODate, data: Data): RecoveryDay | null {
   const prompt = r.settings.checkinPrompt !== 'off';
   const adaptLabel = r.settings.adaptLabel !== false;
 
-  const decision = (d: Decision, code: SessionCode | null): Decision => {
+  const decision = (d0: Decision, code: SessionCode | null): Decision => {
     if (ctx.stop) {
+      const d = d0;
       return {
         ...d, type: 'Recovery', suggested: 'Recovery', mods: modsForType('Recovery'), allowed: ['Recovery'], canUseFull: false,
         reason: `Seek medical care: ${ctx.stop.why}`, why: [...d.why, ctx.stop.advice, 'Not medical advice.'],
       };
     }
+    const d = travelDecision(d0, date, data);
     if (d.mods.rest || d.mods.recovery || d.type === 'Rest' || d.type === 'Recovery') return d;
-    if (!ctx.areas.length && !ctx.block) return d;
-    const why = [...d.why, ...ctx.areas.map((a) => `${a.label}: exercises that load it are protected.`), ctx.areas.length ? 'Injury protection stays whatever you pick.' : 'The recovery block stays whatever you pick.'];
+    if (!ctx.areas.length && !ctx.block && !ctx.ease) return d;
+    const why = [...d.why, ...ctx.areas.map((a) => `${a.label}: exercises that load it are protected.`), ctx.areas.length ? 'Injury protection stays whatever you pick.' : ctx.block ? 'The recovery block stays whatever you pick.' : 'Back from travel: easier loads for the first sessions.'];
     let mods = { ...d.mods };
     if (ctx.block && mods.intensity !== 'light' && !mods.travel) {
       mods = { ...mods, intensity: ctx.block.level === 'light' ? 'light' : mods.intensity === 'full' ? 'moderate' : mods.intensity };
       why.push(`Recovery block: ${ctx.block.reason}.`);
+    }
+    if (ctx.ease && !ctx.block && mods.intensity === 'full' && !mods.travel) {
+      mods = { ...mods, intensity: 'moderate' };
+      why.push(`Easier day: ${ctx.ease}.`);
     }
     if (d.type === 'Travel' || mods.travel) return { ...d, mods, why, canUseFull: false };
     const legRest = !!code && LOWER_BODY_SESSIONS.includes(code) && ctx.areas.some((a) => isLowerLimb(a.region) && (a.level === 'stop' || a.level === 'protect' || a.level === 'load'));
@@ -197,6 +204,12 @@ export function recoveryDay(date: ISODate, data: Data): RecoveryDay | null {
       let training = prompt && active.length ? insertAfterCheckin(t.training, checkinTasks(active, date)) : t.training;
       // On days with no session, a physio prescription still has its own task (on training days it is in the session).
       if (!plan.code && !ctx.stop) training = [...training, ...rxTasks(ctx, date, data)];
+      const f = flightOn(date, data);
+      if (f && data.recovery?.settings.smartTravel) {
+        const id = 'rec:flight';
+        const done = !!data.days.get(date)?.tasks?.[id];
+        training = [...training, { id, label: 'Flight: walk every hour, drink water', group: 'training', tone: 'frost', done, progress: done ? 1 : 0, sub: `About ${f.flightHours} h` }];
+      }
       if (ctx.stop) {
         training = training
           .filter((x) => !x.cardio && !x.id.startsWith('cardio:') && x.id !== 'steps' && x.id !== 'walk-lunch' && x.id !== 'mobility')

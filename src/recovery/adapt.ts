@@ -38,6 +38,7 @@ export function preBuild(input: BuildInput, ctx: Ctx): BuildInput {
     const level = ctx.block.level;
     if (level === 'light' || (level === 'moderate' && mods.intensity === 'full')) mods = { ...mods, intensity: level, spine: mods.spine || level === 'light' };
   }
+  if (ctx.ease && !ctx.block && mods.intensity === 'full' && !mods.recovery && !mods.rest && !mods.travel) mods = { ...mods, intensity: 'moderate' };
   return { ...input, mods, tests: ctx.block ? [] : tests };
 }
 
@@ -117,6 +118,14 @@ export function filterSession(plan: SessionPlan, input: BuildInput, ctx: Ctx, ki
   let removed = 0;
 
   for (const e of plan.exercises) {
+    // A gym profile: rows that need kit this gym lacks are swapped or skipped, like a protected row.
+    if (ctx.enforceKit && kit && e.role !== 'test' && !kitOk(tagsFor(e.name), kit, data, e.name)) {
+      const why = `Not at ${ctx.kitLabel ?? 'this gym'}: needs ${tagsFor(e.name)?.kit.filter((k) => !kit.has(k)).join(', ') ?? 'other kit'}`;
+      skipped.push({ name: e.name, why });
+      blocked.push({ row: e, why });
+      removed += e.sets;
+      continue;
+    }
     const v = judge(e.name, ctx, { main: e.role === 'main' || e.role === 'test' });
     if (!v.ok) {
       skipped.push({ name: e.name, why: v.why });
@@ -230,6 +239,8 @@ export function finish(plan: SessionPlan, ctx: Ctx, f: Filtered, added: number):
     if (added) parts.push(`${added} sets added for the goal`);
     notes.unshift(`Injury plan: ${parts.join(' · ')}.`);
   }
+  if (ctx.ease && !ctx.block) notes.unshift(`Easier day: ${ctx.ease}.`);
+  if (ctx.enforceKit && ctx.kitLabel) notes.push(`Gym: ${ctx.kitLabel}. Exercises it cannot host are swapped or skipped.`);
   if (ctx.block) notes.unshift(`Recovery block until ${formatMedium(ctx.block.until)}: ${ctx.block.reason}. One more rep in reserve on everything.`);
   const rows = ctx.block ? exercises.map((e) => ({ ...e, rir: atLeastRir(e.rir, String(rirNum(e.rir) + 1)) })) : exercises;
   return { ...plan, exercises: rows, feedbackLifts, notes };
