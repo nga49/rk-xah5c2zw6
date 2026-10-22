@@ -12,6 +12,7 @@ import {
 } from '../model';
 import { activeInjuries } from '../state';
 import { InjuryHistory } from './History';
+import { ReportButton, RxEditor } from './RxEditor';
 import { NotMedical } from './NotMedical';
 import { DateInput, PainSeg, Picks, TriTest } from './widgets';
 
@@ -90,6 +91,8 @@ export function InjuryForm({ data, date, id }: { data: Data; date: ISODate; id?:
       <SectionTitle>{existing ? 'Edit injury' : 'Log an injury'}</SectionTitle>
       <NotMedical />
       {existing && <InjuryHistory data={data} date={date} injuryId={existing.id} />}
+      {existing && <ReportButton data={data} date={date} injury={existing} />}
+      {existing && existing.kind !== 'longTerm' && <RxEditor key={`rx:${existing.id}`} data={data} date={date} injury={existing} />}
       {flags.length > 0 && <div className="banner">Red flag ticked: seek medical care. Training for that area stops until you have been seen.</div>}
       <Card>
         <div className="stack">

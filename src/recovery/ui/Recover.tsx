@@ -8,6 +8,7 @@ import { InjuryCheckinSheet, InjuryList } from './Injuries';
 import { NotMedical } from './NotMedical';
 import { WellnessSection, WellnessSheet } from './Wellness';
 import { PreventionSection } from './Prevention';
+import { RetestSection } from './Retest';
 
 /** The module's own screen at #/recover (no extra tab). Sub-routes: injury/<id|new>, checkin/<id>, wellness, fatigue, goal. */
 export function Recover({ data, view, route }: ScreenProps) {
@@ -29,6 +30,9 @@ export function Recover({ data, view, route }: ScreenProps) {
       <NotMedical />
       <SlotBoundary label="Injuries">
         <InjuryList data={data} date={view.date} />
+      </SlotBoundary>
+      <SlotBoundary label="Retest">
+        <RetestSection data={data} date={view.date} />
       </SlotBoundary>
       <div ref={wellRef}>
         <SlotBoundary label="Wellness">

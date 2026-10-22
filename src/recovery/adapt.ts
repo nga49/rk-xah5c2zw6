@@ -12,6 +12,7 @@ import { judge, type AreaRule, type Ctx } from './constraints';
 import { painCheck } from './phases';
 import { rehabFor, REHAB_CONDITION } from './rehab';
 import { RAMP } from './rules';
+import { rxFor, rxRows } from './rx';
 import { tagsFor, type ExerciseTags, type Kit } from './tags';
 import type { Core } from './volume';
 
@@ -178,12 +179,17 @@ export function filterSession(plan: SessionPlan, input: BuildInput, ctx: Ctx, ki
     });
   }
 
-  // Rehab for each area in Load or Build, unless a clinician or physio set restrictions for it (follow theirs).
+  // A physio's prescription replaces the generic rehab for that area, in any phase but a red flag.
+  // Otherwise generic rehab in Load or Build, unless a clinician set restrictions for it (follow theirs).
   if (plan.code && !plan.mods.recovery) {
     for (const a of ctx.areas) {
+      const rx = rxFor(a.injury.id, date, data);
+      if (rx) {
+        if (a.level !== 'stop') for (const row of rxRows(rx, date, a.name)) if (!names.has(row.name)) (names.add(row.name), kept.push(row));
+        continue;
+      }
       const items = rehabFor(a.region, a.level);
-      const hasRx = (data.recovery?.records ?? []).some((r) => r.kind === 'rx' && r.injuryId === a.injury.id && r.date <= date);
-      if (!items.length || hasRx || a.injury.restrictions?.blocked?.length) continue;
+      if (!items.length || a.injury.restrictions?.blocked?.length) continue;
       items.forEach((it, i) => {
         if (names.has(it.name)) return;
         names.add(it.name);

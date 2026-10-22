@@ -16,6 +16,7 @@ import { constraintsOn, judge, type Ctx } from './constraints';
 import { FLAG_LABEL, isLowerLimb, PHASE_WORD } from './model';
 import { FLAG_TIER, TIER_ADVICE } from './phases';
 import { insightSources } from './registry';
+import { rxDue, rxFor } from './rx';
 import { activeInjuries, checkedInToday, injuryName, type ActiveInjury } from './state';
 
 export interface RecoveryDay {
@@ -42,6 +43,19 @@ function checkinTasks(active: ActiveInjury[], date: ISODate): Task[] {
       auto: true,
     } satisfies Task;
   });
+}
+
+function rxTasks(ctx: Ctx, date: ISODate, data: Data): Task[] {
+  const out: Task[] = [];
+  for (const a of ctx.areas) {
+    const rx = a.level === 'stop' ? null : rxFor(a.injury.id, date, data);
+    const due = rx ? rxDue(rx, date) : [];
+    if (!due.length) continue;
+    const id = `rec:rx:${a.injury.id}`;
+    const done = !!data.days.get(date)?.tasks?.[id];
+    out.push({ id, label: `Physio exercises · ${a.name}`, group: 'training', tone: 'moss', done, progress: done ? 1 : 0, sub: due.map((it) => it.name).join(', '), link: `#/recover/injury/${a.injury.id}` });
+  }
+  return out;
 }
 
 function insertAfterCheckin(list: Task[], extra: Task[]): Task[] {
@@ -181,12 +195,13 @@ export function recoveryDay(date: ISODate, data: Data): RecoveryDay | null {
     tests: (t) => t.filter((x) => testAllowed(x, ctx)),
     tasks: (t, plan) => {
       let training = prompt && active.length ? insertAfterCheckin(t.training, checkinTasks(active, date)) : t.training;
+      // On days with no session, a physio prescription still has its own task (on training days it is in the session).
+      if (!plan.code && !ctx.stop) training = [...training, ...rxTasks(ctx, date, data)];
       if (ctx.stop) {
         training = training
           .filter((x) => !x.cardio && !x.id.startsWith('cardio:') && x.id !== 'steps' && x.id !== 'walk-lunch' && x.id !== 'mobility')
           .map((x) => (x.id === 'session' ? { ...x, label: 'Training paused · seek care', sub: undefined, tone: 'ember' as const } : x));
       }
-      void plan;
       return { ...t, training };
     },
     insights: (list) => {

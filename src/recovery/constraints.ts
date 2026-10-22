@@ -8,6 +8,7 @@ import { isLowerLimb, MOVEMENT_LABEL, PHASE_WORD, REGION_LABEL, FLAG_LABEL, type
 import { FLAG_TIER, phaseView, TIER_ADVICE, type FlagTier, type PhaseView } from './phases';
 import { activeInjuries, injuryName, standingLimits, type ActiveInjury } from './state';
 import { contextSources } from './registry';
+import { rxFor } from './rx';
 import { tagsFor, type ExerciseTags } from './tags';
 
 export interface AreaRule {
@@ -90,10 +91,9 @@ function build(date: ISODate, data: Data): Ctx | null {
     const isActive = active.some((a) => a.injury.id === i.id);
     if (isActive || i.restrictions?.until) addBlocked(i, i.restrictions?.blocked, i.restrictions?.until, 'Clinician');
   }
-  for (const r of data.recovery?.records ?? []) {
-    if (r.kind !== 'rx' || r.date > date) continue;
-    const inj = data.recovery?.injuries.find((x) => x.id === r.injuryId);
-    if (inj && active.some((a) => a.injury.id === inj.id)) addBlocked(inj, r.blocked, r.until, 'Physio');
+  for (const a of active) {
+    const rx = rxFor(a.injury.id, date, data);
+    if (rx) addBlocked(a.injury, rx.blocked, rx.until, 'Physio');
   }
 
   const areas: AreaRule[] = active.map((a) => {
