@@ -9,12 +9,15 @@ import { saveInjuryCheckin } from '../actions';
 import { FLAG_LABEL, FUNCTIONAL_TESTS, isLowerLimb, PHASE_WORD, RED_FLAGS, STATUS_LABEL, TEST_LABEL, type FunctionalTest, type RedFlag } from '../model';
 import { activeInjuries, checkedInToday, injuryName, statusOn, standingLimits } from '../state';
 import { PainSeg, Picks, Scale5, TriTest } from './widgets';
+import { constraintsOn } from '../constraints';
+import { PhaseStep } from './PhaseStep';
 
 /** Recover screen: active injuries, long-term limits and past entries. */
 export function InjuryList({ data, date }: { data: Data; date: ISODate }) {
   const active = activeInjuries(date, data);
   const limits = standingLimits(date, data);
   const past = (data.recovery?.injuries ?? []).filter((i) => i.kind !== 'longTerm' && statusOn(i, date, data) === 'cleared');
+  const areas = constraintsOn(date, data)?.areas ?? [];
   return (
     <section className="section" aria-label="Injuries">
       <SectionTitle right={<button className="link-btn row" style={{ gap: 2 }} onClick={() => go('recover/injury/new')}><Plus size={14} /> Log</button>}>Injuries</SectionTitle>
@@ -40,6 +43,7 @@ export function InjuryList({ data, date }: { data: Data; date: ISODate }) {
             {a.flags.length > 0 && <Chip tone="ember">Red flag</Chip>}
           </div>
           {a.flags.length > 0 && <div className="small" style={{ color: 'var(--ember)', marginTop: 8 }}>Seek medical care: {a.flags.map((f) => FLAG_LABEL[f]).join('; ')}.</div>}
+          {areas.filter((x) => x.injury.id === a.injury.id).map((x) => <PhaseStep key={x.injury.id} area={x} date={date} />)}
           <button className={checkedInToday(a, date) ? 'btn block' : 'btn primary block'} style={{ marginTop: 10 }} onClick={() => go(`recover/checkin/${a.injury.id}`)}>
             {checkedInToday(a, date) ? 'Check-in done · edit' : 'Daily check-in · 30 s'}
           </button>

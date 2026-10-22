@@ -8,12 +8,13 @@ import type { Data } from '../engine/model';
 import { live } from '../engine/model';
 import { getPosition, pausesOf, planDateOf, realDateOf } from '../engine/position';
 import { scheduledCode } from '../engine/schedule';
-import { buildSessionCore, liftForSlot } from '../engine/session';
+import { buildSessionCore } from '../engine/session';
 import { targetWeight } from '../engine/stats';
 import { computeDay } from '../engine/today';
 import { unitsOf } from '../engine/units';
 import type { ISODate, LiftKey } from '../plan/types';
 import type { RecordOf } from './model';
+import { goalLiftsOf } from './lifts';
 import { goalSignals, type GoalSignals } from './signals';
 import { addSession, floorFor, FILL_PRIORITY, FLOOR, GOAL_MUSCLES, originalCounts, performedSets, YOKE, type GoalMuscle, type MuscleCount } from './volume';
 
@@ -157,7 +158,7 @@ function weightPart(date: ISODate, data: Data, goal: GoalDef): Part & { gap?: nu
   const prevCurve = targetWeight(planDateOf(addDays(date, -7), pauses)) ?? curve;
   const prevGap = prevAvg != null ? prevAvg - prevCurve : null;
   const side = gap > 0 ? 'above' : 'below';
-  const maint = data.recovery?.records.some((r) => r.kind === 'nutrition' && r.mode === 'maintenance' && r.date <= date);
+  const maint = data.recovery?.records.some((r) => r.kind === 'nutrition' && r.mode === 'maintenance' && r.date <= date) || live(data.kcalAdjust).some((k) => k.sourceId?.startsWith('rec:maint:') && k.date <= date);
   if (Math.abs(gap) <= 1.5) return { status: 'maintained', reason: `Weight ${u.w(avg, 1)}, on the plan curve.`, gap };
   if (Math.abs(gap) <= 3 || prevGap == null || Math.abs(prevGap) <= 3) {
     return { status: 'slowed', reason: `Weight ${u.w(Math.abs(gap), 1)} ${side} the plan curve${maint ? ' (maintenance on purpose)' : ''}.`, gap };
@@ -166,10 +167,7 @@ function weightPart(date: ISODate, data: Data, goal: GoalDef): Part & { gap?: nu
 }
 
 /** The main lifts the goal rests on this year. */
-export function goalLifts(date: ISODate, data: Data): LiftKey[] {
-  const pos = getPosition(date, data.plan);
-  return [...(['press', 'bench', 'pull', 'squat'] as const).map((s) => liftForSlot(s, pos, data)), 'shrug', 'hipthrust'];
-}
+export const goalLifts = goalLiftsOf;
 
 function strengthPart(date: ISODate, data: Data, sig: GoalSignals): Part {
   const lifts = goalLifts(date, data).filter((l) => !sig.pausedLifts.has(l));
