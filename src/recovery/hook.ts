@@ -9,6 +9,8 @@ import { applyFills, weekPlan } from './fill';
 import { remainingWeeks } from './phases';
 import { noSignals, provideSignals, type GoalSignals } from './signals';
 import { goalLiftsOf } from './lifts';
+// Registers the wellness signals (fills off on watch or flag, Today cards).
+import './wellness';
 
 export type Core = (input: BuildInput) => SessionPlan;
 

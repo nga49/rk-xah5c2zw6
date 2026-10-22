@@ -7,6 +7,7 @@ import type { ISODate } from '../plan/types';
 import { isLowerLimb, MOVEMENT_LABEL, PHASE_WORD, REGION_LABEL, FLAG_LABEL, type Injury, type Movement, type Phase, type RecordOf, type Region } from './model';
 import { FLAG_TIER, phaseView, TIER_ADVICE, type FlagTier, type PhaseView } from './phases';
 import { activeInjuries, injuryName, standingLimits, type ActiveInjury } from './state';
+import { contextSources } from './registry';
 import { tagsFor, type ExerciseTags } from './tags';
 
 export interface AreaRule {
@@ -50,13 +51,6 @@ export interface Ctx {
   active: ActiveInjury[];
 }
 
-/** Extra conditions read by other phases (wellness fatigue level). Registered, so this file stays small. */
-type Extra = (date: ISODate, data: Data) => { noFill?: string | null; block?: RecordOf<'recoveryBlock'> | null };
-const extras: Extra[] = [];
-export function provideContext(fn: Extra): void {
-  extras.push(fn);
-}
-
 function acceptedBlock(date: ISODate, data: Data): RecordOf<'recoveryBlock'> | null {
   const rows = (data.recovery?.records ?? []).filter((r): r is RecordOf<'recoveryBlock'> => r.kind === 'recoveryBlock' && r.date <= date && r.until >= date);
   return rows.sort((a, b) => a.updatedAt - b.updatedAt).at(-1) ?? null;
@@ -80,7 +74,7 @@ function build(date: ISODate, data: Data): Ctx | null {
   const longTerm = standingLimits(date, data);
   let block = acceptedBlock(date, data);
   let noFill: string | null = null;
-  for (const x of extras) {
+  for (const x of contextSources) {
     const e = x(date, data);
     if (e.block) block = e.block;
     if (e.noFill && !noFill) noFill = e.noFill;

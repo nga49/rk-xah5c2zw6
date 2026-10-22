@@ -224,6 +224,7 @@ export function finish(plan: SessionPlan, ctx: Ctx, f: Filtered, added: number):
     if (added) parts.push(`${added} sets added for the goal`);
     notes.unshift(`Injury plan: ${parts.join(' · ')}.`);
   }
-  if (ctx.block) notes.unshift(`Recovery block until ${formatMedium(ctx.block.until)}: ${ctx.block.reason}.`);
-  return { ...plan, exercises, feedbackLifts, notes };
+  if (ctx.block) notes.unshift(`Recovery block until ${formatMedium(ctx.block.until)}: ${ctx.block.reason}. One more rep in reserve on everything.`);
+  const rows = ctx.block ? exercises.map((e) => ({ ...e, rir: atLeastRir(e.rir, String(rirNum(e.rir) + 1)) })) : exercises;
+  return { ...plan, exercises: rows, feedbackLifts, notes };
 }

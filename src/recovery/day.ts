@@ -15,6 +15,7 @@ import { testAllowed } from './adapt';
 import { constraintsOn, judge, type Ctx } from './constraints';
 import { FLAG_LABEL, isLowerLimb, PHASE_WORD } from './model';
 import { FLAG_TIER, TIER_ADVICE } from './phases';
+import { insightSources } from './registry';
 import { activeInjuries, checkedInToday, injuryName, type ActiveInjury } from './state';
 
 export interface RecoveryDay {
@@ -23,13 +24,6 @@ export interface RecoveryDay {
   tests<T extends { lift: LiftKey }>(t: T[]): T[];
   tasks(t: { training: Task[]; mind: Task[] }, plan: SessionPlan): { training: Task[]; mind: Task[] };
   insights(list: Insight[]): Insight[];
-}
-
-/** Extra insight sources from later phases (wellness, prevention), registered so this file stays small. */
-type InsightSource = (date: ISODate, data: Data, ctx: Ctx | null) => Insight[];
-const sources: InsightSource[] = [];
-export function provideInsights(fn: InsightSource): void {
-  sources.push(fn);
 }
 
 /** Daily injury check-in, offered right after the readiness check-in while an injury is active. */
@@ -140,7 +134,12 @@ export function recoveryDay(date: ISODate, data: Data): RecoveryDay | null {
   const r = data.recovery;
   if (!r) return null;
   const ctx = constraintsOn(date, data);
-  if (!ctx) return null;
+  if (!ctx) {
+    // Nothing to protect, but a wellness card may still be due (a doctor prompt, a coach note).
+    const extra = insightSources.flatMap((s) => s(date, data, false)).filter((i) => !(i.dismissible && data.dismissed.has(i.id)));
+    if (!extra.length) return null;
+    return { decision: (d) => d, offer: (o) => o, tests: (t) => t, tasks: (t) => t, insights: (list) => [...list, ...extra].sort((a, b) => b.priority - a.priority) };
+  }
   const active = activeInjuries(date, data);
   const prompt = r.settings.checkinPrompt !== 'off';
   const adaptLabel = r.settings.adaptLabel !== false;
@@ -153,7 +152,8 @@ export function recoveryDay(date: ISODate, data: Data): RecoveryDay | null {
       };
     }
     if (d.mods.rest || d.mods.recovery || d.type === 'Rest' || d.type === 'Recovery') return d;
-    const why = [...d.why, ...ctx.areas.map((a) => `${a.label}: exercises that load it are protected.`), 'Injury protection stays whatever you pick.'];
+    if (!ctx.areas.length && !ctx.block) return d;
+    const why = [...d.why, ...ctx.areas.map((a) => `${a.label}: exercises that load it are protected.`), ctx.areas.length ? 'Injury protection stays whatever you pick.' : 'The recovery block stays whatever you pick.'];
     let mods = { ...d.mods };
     if (ctx.block && mods.intensity !== 'light' && !mods.travel) {
       mods = { ...mods, intensity: ctx.block.level === 'light' ? 'light' : mods.intensity === 'full' ? 'moderate' : mods.intensity };
@@ -190,7 +190,7 @@ export function recoveryDay(date: ISODate, data: Data): RecoveryDay | null {
       return { ...t, training };
     },
     insights: (list) => {
-      const extra = [...moduleInsights(date, data, ctx), ...sources.flatMap((s) => s(date, data, ctx))];
+      const extra = [...moduleInsights(date, data, ctx), ...insightSources.flatMap((s) => s(date, data, true))];
       let out = [...list];
       // Easy days caused by module stop days are not a reason for an early reload.
       const stopDays = [...Array(7).keys()].some((i) => !!constraintsOn(addDays(date, -i), data)?.stop);
