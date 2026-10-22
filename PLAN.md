@@ -81,3 +81,11 @@ Deletes are soft (`deleted: true`) so a restore or merge never brings a deleted 
 6. Log and Stats with charts and trophies.
 7. Storage, automatic GitHub backup and restore, export and import, PIN, tests 16 and 17.
 8. Ask Claude, polish, accessibility, iPhone viewport test, README.
+
+## Injury and recovery module (src/recovery, off by default)
+
+- **Seams**: `buildSession` wraps the original builder (`buildSessionCore`) and calls `recoveryHook` only when module data is loaded; `computeDay` asks `recoveryDay` for a day adapter (badge, swap card, tests, tasks, insights), which is null when nothing applies. With the switch off, `Data.recovery` is never set, so both are identity.
+- **Data**: Dexie version 2 adds `injuries`, `injuryCheckins`, `wellnessCheckins`, `recoveryRecords` (one store for every other kind, readers ignore unknown kinds) and the device-only `localPhotos` (never backed up). Phase, status and clearance are derived from append-only `injuryEvent` records.
+- **Engine**: `constraints.ts` decides per date what each exercise may do (red-flag tiers, clinician and physio blocks, phase rules, long-term limits, gym kit); `adapt.ts` protects rows, adds easier versions, rehab or physio rows and the return ramp; `fill.ts` redistributes spare capacity, yoke first; `phases.ts` moves phases on symptoms; `rules.ts` names each rule's source or marks it a heuristic.
+- **Extension points**: `registry.ts` lets wellness, travel and mind-and-body plug context and Today cards in without import cycles.
+- **Proofs**: golden fingerprint of the original engine, module-on-nothing-active equals golden, frozen v1 migration harness, seam and privacy guards, phone-width e2e.

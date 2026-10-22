@@ -27,7 +27,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('module off: the recover route is just Today, and Today has no module cards', async ({ page }) => {
-  await page.clock.setFixedTime(new Date('2026-10-22T08:00:00'));
+  await page.clock.setFixedTime(new Date('2026-10-29T08:00:00'));
   await setup(page);
   await expect(page.getByRole('region', { name: 'Goal' })).toHaveCount(0);
   // Like any unknown route in the original app: Today's content under the app name.
@@ -41,7 +41,7 @@ test('module on: every new screen fits the phone width, with no console errors, 
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-  await page.clock.setFixedTime(new Date('2026-10-22T08:00:00'));
+  await page.clock.setFixedTime(new Date('2026-10-29T08:00:00'));
   await setup(page);
   await page.goto('./#/settings');
   await page.getByRole('switch', { name: 'Injury and recovery module' }).click();

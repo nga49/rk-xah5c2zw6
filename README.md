@@ -9,6 +9,23 @@ A private training and mindset companion for one person: a four-year plan (36 bl
 - No analytics, no trackers. The page may only talk to the GitHub API (Content-Security-Policy). `noindex`, and `robots.txt` disallows everything.
 - The build fails if the output contains known personal markers (`npm run scan`).
 
+## Injury and recovery module (optional)
+
+Off by default: Settings → Injury and recovery. Off gives the original plan exactly (tested against a fingerprint of the original engine). On, it adds:
+
+- **Goal Guardian**: one view of the end goal (weight band, body fat, yoke, strength, a season range for the date). Weekly sets per goal muscle against the plan's rules (2+ days, 10+ sets, neck 8), maintained / slowed / at risk with a reason, on Today and in the Sunday review.
+- **Injury log and daily check-in**: only the body region, side and start date are required. Status, phase and red flags come from an append-only history.
+- **Adaptation**: exercises are tagged with the regions and movements they load. Phases (Protect, Load, Build, Return) move on symptoms: down automatically after a failed pain check, up only when you confirm. Protected exercises are swapped or skipped; spare capacity goes to the yoke first. Clinician and physio restrictions always win; red flags stop the area or all training and say to seek care. Return ramps main lifts from the pre-injury load.
+- **Wellness**: a quick check-in combined with readiness history. Watch turns extra volume off; a flag offers a recovery block that changes sessions only once you accept it.
+- **Prevention**: warm-up ramps on main lifts, load-jump prompts (not predictions), injury patterns, a body map pain log.
+- **Rehab and return**: physio prescriptions inside sessions, a conservative retest (never a max), a one-tap clinician report as a PDF made on the phone.
+- **Life context**: travel respects injuries; Smart travel (its own switch, off by default) adds yoke-first travel kits, dated trips, flight days and an easier return. Gym equipment profiles.
+- **Mind and body**: measurements, progress photos kept on the phone only (never backed up), a mindset check, protein tracking and a cut / maintenance / surplus switch you confirm.
+
+Every rule names its source in the code, or is marked as a heuristic. Not medical advice: the app never diagnoses.
+
+To roll back, switch the module off. Module data stays on the phone and in the backup, unused, until it is switched on again.
+
 ## Install on the iPhone
 
 1. Open the app's address in **Safari**.
@@ -56,6 +73,7 @@ npm run art        # repaint the fjord background and the grain texture (needs C
 ```
 
 Optional local fixture for test 12 with real numbers: `tests/private.local.json` (git-ignored, never commit it).
+Optional local injury scenario for the recovery module: `tests/injury.local.json`, and extra privacy markers: `tests/markers.local.json` (both git-ignored, data only).
 
 ## Where things are
 
@@ -64,6 +82,7 @@ Optional local fixture for test 12 with real numbers: `tests/private.local.json`
 | `src/plan` | The plan: blocks, templates, seasons, rotations, content (brief section 6) |
 | `src/engine` | Deterministic rules: position, loads, readiness, session types, scheduling, tasks, nutrition, insights, trophies, Ask Claude pack |
 | `src/db`, `src/sync` | IndexedDB (Dexie), merge, GitHub backup and restore |
+| `src/recovery` | The optional injury and recovery module: one seam into the session builder, a day adapter, its own tables and screens |
 | `src/screens`, `src/ui` | Today, Train, Mind, Log, Stats, Settings, setup, PIN, Ask Claude |
 | `tests` | Acceptance tests 1 to 17 and the 5.3b unit tests |
 | `e2e` | Browser tests: setup, check-in, logging, Ask Claude, offline, phone width |

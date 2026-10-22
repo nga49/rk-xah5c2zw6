@@ -1,5 +1,12 @@
 # Changelog
 
+## Injury and recovery module (feature branch, off by default)
+
+- One switch in Settings; off gives the original plan exactly, proven by a fingerprint of every plan day taken before any change.
+- Database version 2 adds new tables only; nothing existing is renamed, dropped or retyped. Old backups restore cleanly.
+- Goal Guardian, injury log with daily check-ins, exercise tags, a symptom-driven adaptation engine with red flags and clinician restrictions on top, wellness and recovery blocks, Today banner and weekly review, prevention (warm-ups, load prompts, patterns, body map), rehab and return (physio prescriptions, conservative retest, clinician PDF), life context (Smart travel, gym profiles), mind and body (measurements, local-only photos, mindset, protein and calories mode).
+- The Recover screen loads as its own file, only when opened.
+
 ## The Greek touch
 
 - Two worlds, as in the story the look draws on: a Spartan's Greek past carried into the Norse North.
