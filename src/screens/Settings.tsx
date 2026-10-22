@@ -11,6 +11,7 @@ import { checkAccess, friendly } from '../sync/github';
 import { hashPin } from '../security/pin';
 import { toast } from '../state/hooks';
 import { Card, Chip, Field, NumInput, Seg, SectionTitle, Toggle, UnitToggle } from '../ui/kit';
+import { RecoverySettingsCard } from '../recovery/ui/SettingsCard';
 
 export const TOKEN_URL =
   'https://github.com/settings/personal-access-tokens/new?name=Ragnarok%20backup&description=Lets%20Ragnarok%20back%20up%20to%20your%20private%20repository.&expires_in=none&contents=write';
@@ -25,6 +26,7 @@ export function Settings({ data, device, route, view }: ScreenProps) {
     <div className="stack">
       <ProfileCard profile={profile} />
       <GymCard profile={profile} />
+      <RecoverySettingsCard />
       <div ref={backupRef}>
         <BackupCard device={device} />
       </div>

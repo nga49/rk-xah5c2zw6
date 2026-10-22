@@ -4,7 +4,8 @@ import 'fake-indexeddb/auto';
 import Dexie from 'dexie';
 import { describe, expect, it } from 'vitest';
 import { DATA_TABLES, RagnarokDB, useDatabase } from '../src/db/db';
-import { loadData, snapshot } from '../src/db/store';
+import { exportFile, loadData, mergeFile, snapshot } from '../src/db/store';
+import { saveInjury, saveLocalPhoto, saveRecord, saveSettings } from '../src/recovery/actions';
 
 /** Version 1 exactly as in src/db/db.ts at main 0b9b9fe. Never edit. */
 export const V1_STORES = {
@@ -88,8 +89,11 @@ describe('database schema: additive only', () => {
       expect(schema.primKey.name).toBe(want[0]);
       expect(schema.indexes.map((i) => i.name).sort()).toEqual(want.slice(1).sort());
     }
+    expect(d.verno).toBe(2);
+    for (const t of ['injuries', 'injuryCheckins', 'wellnessCheckins', 'recoveryRecords', 'localPhotos']) expect(await d.table(t).count()).toBe(0);
     useDatabase(d);
     const data = await loadData();
+    expect('recovery' in data).toBe(false);
     expect(data.profile?.name).toBe('Test');
     expect(data.days.has('2026-10-20')).toBe(true);
     expect(data.days.has('2026-10-21')).toBe(false);
@@ -101,4 +105,65 @@ describe('database schema: additive only', () => {
 });
 
 /** Stores that are deliberately never backed up (besides device). Empty before the module. */
-export const LOCAL_ONLY: string[] = [];
+export const LOCAL_ONLY: string[] = ['localPhotos'];
+
+describe('recovery module data: backups and rollback', () => {
+  it('an old backup (no module tables) merges into the new schema; the module stays off', async () => {
+    const d = new RagnarokDB(`old-${Math.random()}`);
+    useDatabase(d);
+    const seed = v1Seed();
+    const tables: Record<string, unknown[]> = {};
+    for (const t of V1_TABLES.filter((x) => x !== 'device')) tables[t] = seed[t];
+    const n = await mergeFile({ app: 'ragnarok', version: 1, exportedAt: '2026-10-20T00:00:00Z', tables: tables as never });
+    expect(n).toBeGreaterThan(0);
+    const data = await loadData();
+    expect(data.profile?.name).toBe('Test');
+    expect('recovery' in data).toBe(false);
+    d.close();
+  });
+
+  it('module rows round-trip through export and import; local photos never leave the phone', async () => {
+    const a = new RagnarokDB(`a-${Math.random()}`);
+    useDatabase(a);
+    await saveSettings({ enabled: true });
+    await saveInjury({ region: 'calf', side: 'right', start: '2027-05-01' });
+    await saveRecord<'measure'>({ kind: 'measure', date: '2027-05-01', armCm: 40 });
+    await saveLocalPhoto('2027-05-01', 'front', 'data:image/jpeg;base64,AAAA');
+    const file = await exportFile();
+    expect(JSON.stringify(file)).not.toContain('localPhotos');
+    expect((file.tables as Record<string, unknown[]>).injuries.length).toBe(1);
+    const b = new RagnarokDB(`b-${Math.random()}`);
+    useDatabase(b);
+    await mergeFile(file);
+    const data = await loadData();
+    expect(data.recovery?.injuries.map((i) => i.region)).toEqual(['calf']);
+    expect(await b.localPhotos.count()).toBe(0);
+    a.close();
+    b.close();
+  });
+
+  it('with module rows present but the module off, loadData returns exactly the original keys', async () => {
+    const d = new RagnarokDB(`off-${Math.random()}`);
+    useDatabase(d);
+    await saveInjury({ region: 'knee', side: 'left', start: '2027-01-01' });
+    await saveSettings({ enabled: false });
+    const data = await loadData();
+    expect(Object.keys(data).sort()).toEqual(['body', 'cardio', 'days', 'dismissed', 'kcalAdjust', 'maxes', 'plan', 'profile', 'reviews', 'seasonScores', 'standards', 'weights']);
+    d.close();
+  });
+
+  it('rolling the code back still opens the database and reads every original table', async () => {
+    const name = `down-${Math.random()}`;
+    await seededV1(name);
+    const d = new RagnarokDB(name);
+    await d.open();
+    useDatabase(d);
+    await saveInjury({ region: 'wrist-hand', side: 'left', start: '2027-01-01' });
+    d.close();
+    const old = openV1(name);
+    await old.open();
+    expect((await old.table('profile').get('me'))?.name).toBe('Test');
+    expect(await old.table('weights').count()).toBe(2);
+    old.close();
+  });
+});

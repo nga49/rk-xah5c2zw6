@@ -10,6 +10,7 @@ import { calibrationFor, decide, sleepAverage3, type Calibration, type Decision 
 import { cardioBalance, easyDaysInLast7, missedDayOffer, scheduledCode, walkAfterLunch, type CardioBalance, type SwapOffer } from './schedule';
 import { buildSession, type SessionPlan } from './session';
 import { buildTasks, type Task } from './tasks';
+import { recoveryDay } from '../recovery/day';
 
 export interface DayView {
   date: ISODate;
@@ -55,10 +56,14 @@ export function computeDay(date: ISODate, data: Data, now: Date = new Date()): D
   const pos = getPosition(date, data.plan);
   const calibration = calibrationFor(date, data);
   const code = pos.status === 'active' ? scheduledCode(date, data) : null;
-  const decision = decide({ date, code, data, calibration, status: pos.status });
-  const offer = pos.status === 'active' ? missedDayOffer(date, data, decision.type, PLAN_START) : null;
-  const tests = dueTests(pos, data);
-  const todaysTests = testsForToday(pos, data, decision.type);
+  // Recovery module day adapter: null when the module is off or nothing is active.
+  const rx = recoveryDay(date, data);
+  const decided = decide({ date, code, data, calibration, status: pos.status });
+  const decision = rx ? rx.decision(decided, code) : decided;
+  const offered = pos.status === 'active' ? missedDayOffer(date, data, decision.type, PLAN_START) : null;
+  const offer = rx ? rx.offer(offered) : offered;
+  const tests = rx ? rx.tests(dueTests(pos, data)) : dueTests(pos, data);
+  const todaysTests = rx ? rx.tests(testsForToday(pos, data, decision.type)) : testsForToday(pos, data, decision.type);
   const checkin = data.days.get(date)?.checkin;
   const session = buildSession({ date, code, pos, mods: decision.mods, data, backPain: checkin?.backPain, tests: todaysTests });
   const targets = targetsFor(pos, data);
@@ -67,7 +72,7 @@ export function computeDay(date: ISODate, data: Data, now: Date = new Date()): D
   const cardio = cardioBalance(date, data, pos.year, recoveryWednesday);
   const avg3 = sleepAverage3(date, data);
   const hold = heldHabit(pos, data);
-  const tasks = buildTasks({
+  const builtTasks = buildTasks({
     date,
     pos,
     data,
@@ -81,9 +86,10 @@ export function computeDay(date: ISODate, data: Data, now: Date = new Date()): D
     walkAfterLunch: walkAfterLunch(date, data),
     holdSeason: hold ? pos.season.n : null,
   });
+  const tasks = rx ? rx.tasks(builtTasks, session) : builtTasks;
   const tomorrowDate = addDays(date, 1);
   const tomorrowPos = getPosition(tomorrowDate, data.plan);
-  const insights = buildInsights({
+  const built = buildInsights({
     date,
     now,
     pos,
@@ -95,7 +101,8 @@ export function computeDay(date: ISODate, data: Data, now: Date = new Date()): D
     easyDays: easyDaysInLast7(date, data, decision.type),
     nutrition,
     cardio,
-    tomorrow: { pos: tomorrowPos, code: tomorrowPos.status === 'active' ? scheduledCode(tomorrowDate, data) : null, tests: dueTests(tomorrowPos, data) },
+    tomorrow: { pos: tomorrowPos, code: tomorrowPos.status === 'active' ? scheduledCode(tomorrowDate, data) : null, tests: rx ? rx.tests(dueTests(tomorrowPos, data)) : dueTests(tomorrowPos, data) },
   });
+  const insights = rx ? rx.insights(built) : built;
   return { date, pos, code, decision, checkin, session, tests, tasks, targets, nutrition, insights, offer, calibration, cardio, lines: positionLines(pos) };
 }

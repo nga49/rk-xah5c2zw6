@@ -3,6 +3,7 @@ import type { Data, DayRecord, Profile } from '../engine/model';
 import { emptyData } from '../engine/model';
 import { DATA_TABLES, db, type DataTable, type Rows } from './db';
 import { emptySnapshot, mergeSnapshots, type BackupFile, type Snapshot } from './merge';
+import { loadRecovery } from '../recovery/store';
 
 // ---------------------------------------------------------------- change notifications
 
@@ -120,6 +121,8 @@ export async function loadData(): Promise<Data> {
   data.kcalAdjust = kcalAdjust.filter((r) => !r.deleted);
   data.plan = plan.filter((r) => !r.deleted);
   data.dismissed = new Set(dismissed.filter((r) => !r.deleted).map((r) => r.id));
+  const recovery = await loadRecovery();
+  if (recovery) data.recovery = recovery;
   return data;
 }
 

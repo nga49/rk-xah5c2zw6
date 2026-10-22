@@ -7,7 +7,7 @@ import { realDateOf, pausesOf } from '../src/engine/position';
 import { computeDay } from '../src/engine/today';
 import { PLAN_END, PLAN_START } from '../src/plan';
 import type { ISODate } from '../src/plan/types';
-import { checkin, makeData, profile, setDay, test3rm, uid } from './helpers';
+import { checkin, makeData, profile, resetUid, setDay, test3rm, uid } from './helpers';
 
 /** Small deterministic PRNG (mulberry32). */
 export function prng(seed: number): () => number {
@@ -50,9 +50,13 @@ export function planDays(data: Data): ISODate[] {
   return out;
 }
 
-export const neutralData = () => makeData();
+export const neutralData = () => {
+  resetUid();
+  return makeData();
+};
 
 export function poundsData(): Data {
+  resetUid();
   const d = makeData();
   d.profile = profile({ units: 'lb', dumbbellStepLb: 5 });
   return d;
@@ -66,6 +70,7 @@ export function poundsData(): Data {
 export function historyData(seed = 2029, until: ISODate = '2028-06-30'): Data {
   const r = prng(seed);
   const pick = <T,>(xs: readonly T[]) => xs[Math.floor(r() * xs.length)];
+  resetUid();
   const data = makeData();
   data.plan.push({ id: uid('pause'), kind: 'pause', date: '2027-03-08', days: 5, updatedAt: 1 });
   data.plan.push({ id: uid('reload'), kind: 'reload', date: '2027-06-14', until: '2027-06-20', updatedAt: 1 });

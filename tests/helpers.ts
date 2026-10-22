@@ -6,6 +6,10 @@ import type { ISODate, LiftKey } from '../src/plan/types';
 
 let seq = 0;
 export const uid = (p = 'id') => `${p}-${++seq}`;
+/** Fixtures reset this so their ids do not depend on what was built before them. */
+export const resetUid = () => {
+  seq = 0;
+};
 
 export function profile(over: Partial<Profile> = {}): Profile {
   return {

@@ -15,6 +15,7 @@ import { Setup } from './screens/Setup';
 import { Lock } from './screens/Lock';
 import { Ask } from './screens/Ask';
 import { About } from './screens/About';
+import { Recover } from './recovery/ui/Recover';
 import type { Data } from './engine/model';
 import type { DayView } from './engine/today';
 import type { DeviceSettings } from './db/store';
@@ -77,6 +78,8 @@ export function App() {
   if (!view) return <div className="app" aria-busy="true" />;
 
   const props: ScreenProps = { data, view, device, route, now };
+  // Recovery module screen: only routable while the module is on; otherwise #/recover falls through to Today.
+  const recoverOn = tab === 'recover' && !!data.recovery;
   const backupOld = (!device.lastBackupAt && data.profile.updatedAt && Date.now() - firstUse(data) > WARN_MS) || (device.lastBackupAt != null && Date.now() - device.lastBackupAt > WARN_MS);
 
   return (
@@ -85,7 +88,7 @@ export function App() {
         <button className="mark" onClick={() => go('settings')} aria-label="Settings">
           <img src="icons/emblem.svg" alt="" width={40} height={40} />
         </button>
-        <h1>{TITLES[tab] ?? 'Ragnarok'}</h1>
+        <h1>{recoverOn ? 'Recover' : TITLES[tab] ?? 'Ragnarok'}</h1>
         <UnitToggle compact unit={data.profile.units === 'lb' ? 'lb' : 'kg'} onChange={(units) => void saveProfile({ units }).then(() => toast(units === 'lb' ? 'Pounds: every weight converted' : 'Kilos: every weight converted'))} />
         {backupOld && (
           <button className="chip t-ember" onClick={() => go('settings/backup')}>
@@ -101,7 +104,8 @@ export function App() {
         {tab === 'stats' && <Stats {...props} />}
         {tab === 'settings' && <Settings {...props} />}
         {tab === 'about' && <About />}
-        {!(tab in TITLES) && <Today {...props} backupOld={!!backupOld} />}
+        {recoverOn && <Recover {...props} />}
+        {!(tab in TITLES) && !recoverOn && <Today {...props} backupOld={!!backupOld} />}
       </main>
       <RestTimerBar />
       <button className="fab" onClick={() => openAsk()} aria-label="Ask Claude" title="Ask Claude">

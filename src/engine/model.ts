@@ -1,5 +1,6 @@
 import type { ISODate, LiftKey, SessionCode } from '../plan/types';
 import type { StandardKey } from '../plan/content';
+import type { RecoveryData } from '../recovery/model';
 
 export type SessionType = 'Full' | 'Moderate' | 'Light' | 'Spine-sparing' | 'Knee-sparing' | 'Upper only' | 'Recovery' | 'Travel' | 'Rest';
 export const SESSION_TYPES: SessionType[] = ['Full', 'Moderate', 'Light', 'Spine-sparing', 'Knee-sparing', 'Upper only', 'Recovery', 'Travel'];
@@ -189,6 +190,8 @@ export interface Data {
   kcalAdjust: KcalAdjust[];
   plan: PlanEvent[];
   dismissed: Set<string>;
+  /** Recovery module data: present only when the module is switched on. */
+  recovery?: RecoveryData;
 }
 
 export function emptyData(): Data {

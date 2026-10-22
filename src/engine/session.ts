@@ -20,6 +20,7 @@ import { accessoryProgress, bodyweightOn, e1rmFor, historyFor, liftOffsetKg, typ
 import { unitsOf } from './units';
 import type { Data, SessionType } from './model';
 import type { Position } from './position';
+import { recoveryHook } from '../recovery/hook';
 
 export type Intensity = 'full' | 'moderate' | 'light';
 
@@ -367,7 +368,7 @@ export interface BuildInput {
 
 const FAILURE_NOTE = 'Stop at RIR 1 or more';
 
-export function buildSession(input: BuildInput): SessionPlan {
+export function buildSessionCore(input: BuildInput): SessionPlan {
   const { date, pos, mods, data } = input;
   const code = mods.rest ? null : input.code;
   const wd = weekday(date);
@@ -543,6 +544,11 @@ export function buildSession(input: BuildInput): SessionPlan {
     notes,
     cardio,
   };
+}
+
+/** Recovery module seam. Without module data (module off) this is exactly the original builder. */
+export function buildSession(input: BuildInput): SessionPlan {
+  return input.data.recovery ? recoveryHook(input, buildSessionCore) : buildSessionCore(input);
 }
 
 function isIsolation(d: PlannedExercise): boolean {

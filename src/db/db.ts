@@ -14,6 +14,7 @@ import type {
   StandardLog,
   WorkingWeight,
 } from '../engine/model';
+import type { Injury, InjuryCheckin, LocalPhoto, RecoveryRecord, WellnessCheckin } from '../recovery/model';
 
 export interface DeviceRow {
   key: string;
@@ -21,7 +22,11 @@ export interface DeviceRow {
 }
 
 /** Tables that are backed up, in a fixed order. `device` is never backed up. */
-export const DATA_TABLES = ['profile', 'days', 'cardio', 'maxes', 'body', 'standards', 'weights', 'reviews', 'seasonScores', 'kcalAdjust', 'plan', 'dismissed', 'photos'] as const;
+export const DATA_TABLES = [
+  'profile', 'days', 'cardio', 'maxes', 'body', 'standards', 'weights', 'reviews', 'seasonScores', 'kcalAdjust', 'plan', 'dismissed', 'photos',
+  // Recovery module (version 2): backed up like every other table.
+  'injuries', 'injuryCheckins', 'wellnessCheckins', 'recoveryRecords',
+] as const;
 export type DataTable = (typeof DATA_TABLES)[number];
 
 export interface Rows {
@@ -38,6 +43,10 @@ export interface Rows {
   plan: PlanEvent;
   dismissed: Dismissal;
   photos: Photo;
+  injuries: Injury;
+  injuryCheckins: InjuryCheckin;
+  wellnessCheckins: WellnessCheckin;
+  recoveryRecords: RecoveryRecord;
 }
 
 export class RagnarokDB extends Dexie {
@@ -55,6 +64,12 @@ export class RagnarokDB extends Dexie {
   dismissed!: Table<Dismissal, string>;
   photos!: Table<Photo, string>;
   device!: Table<DeviceRow, string>;
+  injuries!: Table<Injury, string>;
+  injuryCheckins!: Table<InjuryCheckin, string>;
+  wellnessCheckins!: Table<WellnessCheckin, string>;
+  recoveryRecords!: Table<RecoveryRecord, string>;
+  /** Progress photos kept on this phone only: never backed up or exported. */
+  localPhotos!: Table<LocalPhoto, string>;
 
   constructor(name = 'ragnarok') {
     super(name);
@@ -73,6 +88,14 @@ export class RagnarokDB extends Dexie {
       dismissed: 'id',
       photos: 'id, date',
       device: 'key',
+    });
+    // Recovery module: new stores only. Version 1 above stays exactly as it shipped.
+    this.version(2).stores({
+      injuries: 'id, start',
+      injuryCheckins: 'id, date, injuryId',
+      wellnessCheckins: 'id, date',
+      recoveryRecords: 'id, kind, date',
+      localPhotos: 'id, date',
     });
   }
 

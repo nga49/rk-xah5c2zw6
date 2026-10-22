@@ -2,10 +2,13 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles/app.css';
 import { App } from './App';
+import { RootBoundary } from './recovery/ui/Boundary';
 
 createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
-    <App />
+    <RootBoundary>
+      <App />
+    </RootBoundary>
   </StrictMode>,
 );
 
