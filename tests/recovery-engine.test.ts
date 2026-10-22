@@ -9,6 +9,8 @@ import { guardian, weekVolume } from '../src/recovery/goal';
 import { recoveryHook } from '../src/recovery/hook';
 import { LOWER_LIMB, type Injury, type Phase, type Region } from '../src/recovery/model';
 import { RULES } from '../src/recovery/rules';
+import { DRILL_TAGS } from '../src/recovery/mobility';
+import { BACK_RESET, MOBILITY_DAILY } from '../src/plan/content';
 import { tagsFor } from '../src/recovery/tags';
 import { YOKE } from '../src/recovery/volume';
 import { canonical, morning } from './fixtures';
@@ -270,5 +272,23 @@ describe('engine: rules carry their sources', () => {
       expect(['partly', 'plan-rule', 'heuristic', 'unverified']).toContain(r.evidence);
     }
     expect(LOWER_LIMB).toContain('quad');
+  });
+});
+
+describe('engine: mobility drills follow the injury rules', () => {
+  it('every drill in the routines is tagged', () => {
+    for (const d of [...MOBILITY_DAILY.drills, ...BACK_RESET.drills]) expect([d.name, !!DRILL_TAGS[d.name]]).toEqual([d.name, true]);
+  });
+
+  it('drills that load or stretch a protected area are listed to skip, on the session and the task; walking stays', () => {
+    const { data } = injured('quad');
+    const v = day(data, MON);
+    const note = v.session.notes.find((n) => n.startsWith('Mobility: skip'));
+    expect(note).toMatch(/half-kneeling hip flexor stretch/);
+    expect(note).toMatch(/dead bug/);
+    expect(note).not.toMatch(/thoracic open book|easy walk/);
+    expect(v.tasks.training.find((t) => t.id === 'mobility')?.sub).toMatch(/^Skip: /);
+    const load = injured('quad', 'load').data;
+    expect(day(load, MON).session.notes.find((n) => n.startsWith('Mobility: skip'))).not.toMatch(/dead bug/);
   });
 });

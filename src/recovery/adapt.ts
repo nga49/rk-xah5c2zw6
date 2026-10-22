@@ -13,6 +13,7 @@ import { painCheck } from './phases';
 import { rehabFor, REHAB_CONDITION } from './rehab';
 import { RAMP } from './rules';
 import { rxFor, rxRows } from './rx';
+import { drillsToSkip, skipText } from './mobility';
 import { tagsFor, type ExerciseTags, type Kit } from './tags';
 import type { Core } from './volume';
 
@@ -239,6 +240,8 @@ export function finish(plan: SessionPlan, ctx: Ctx, f: Filtered, added: number):
     if (added) parts.push(`${added} sets added for the goal`);
     notes.unshift(`Injury plan: ${parts.join(' · ')}.`);
   }
+  const skip = drillsToSkip(plan.mobility, ctx);
+  if (skip) notes.push(skipText(skip));
   if (ctx.ease && !ctx.block) notes.unshift(`Easier day: ${ctx.ease}.`);
   if (ctx.enforceKit && ctx.kitLabel) notes.push(`Gym: ${ctx.kitLabel}. Exercises it cannot host are swapped or skipped.`);
   if (ctx.block) notes.unshift(`Recovery block until ${formatMedium(ctx.block.until)}: ${ctx.block.reason}. One more rep in reserve on everything.`);

@@ -19,6 +19,7 @@ import { insightSources } from './registry';
 import { rxDue, rxFor } from './rx';
 import { flightOn, travelDecision } from './travel';
 import { currentMode } from './fuel';
+import { drillsToSkip } from './mobility';
 import { activeInjuries, checkedInToday, injuryName, type ActiveInjury } from './state';
 
 export interface RecoveryDay {
@@ -205,6 +206,8 @@ export function recoveryDay(date: ISODate, data: Data): RecoveryDay | null {
       let training = prompt && active.length ? insertAfterCheckin(t.training, checkinTasks(active, date)) : t.training;
       // On days with no session, a physio prescription still has its own task (on training days it is in the session).
       if (!plan.code && !ctx.stop) training = [...training, ...rxTasks(ctx, date, data)];
+      const skip = drillsToSkip(plan.mobility, ctx);
+      if (skip) training = training.map((x) => (x.id === 'mobility' ? { ...x, sub: `Skip: ${skip.names.map((n) => n.toLowerCase()).join(', ')}` } : x));
       const f = flightOn(date, data);
       if (f && data.recovery?.settings.smartTravel) {
         const id = 'rec:flight';
