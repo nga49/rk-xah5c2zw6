@@ -16,9 +16,11 @@ export interface GoalSignals {
   tradeoffs: string[];
   /** Weeks the injured area is expected to stay out, as a range, while a goal lift is paused. */
   injuryWeeks: [number, number] | null;
+  /** Prevention prompts: load jumps, skipped warm-ups. Prompts to review, never predictions. */
+  prevention: string[];
 }
 
-export const noSignals = (): GoalSignals => ({ pausedMuscles: new Map(), pausedLifts: new Map(), suspended: null, redFlag: null, tradeoffs: [], injuryWeeks: null });
+export const noSignals = (): GoalSignals => ({ pausedMuscles: new Map(), pausedLifts: new Map(), suspended: null, redFlag: null, tradeoffs: [], injuryWeeks: null, prevention: [] });
 
 type Provider = (date: ISODate, data: Data) => GoalSignals;
 let provider: Provider = () => noSignals();

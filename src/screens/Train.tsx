@@ -18,6 +18,7 @@ import { finishSession, logCardio, logExercise, markExercise, pausePlan, reopenS
 import { go, startRest } from '../state/hooks';
 import { Card, Chip, Fold, NumInput, Seg, Sheet, SectionTitle, Tick, Toggle, Why, cx } from '../ui/kit';
 import { DecisionBadge, InsightCard } from './parts';
+import { RecoveryTrainSlot } from '../recovery/ui/slots';
 
 const restText = (s: number) => (s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `0:${String(s).padStart(2, '0')}`);
 export const doseText = (e: { sets: number; reps: number | string | null; work_s?: number; perSide?: boolean; loadNote?: string }) => {
@@ -254,6 +255,7 @@ function ExerciseRow({ ex, date, data }: { ex: PlannedExercise; date: ISODate; d
         </div>
       )}
       {ex.load && ex.load.why.length > 0 && <Why lines={ex.load.why} label="Why this load?" />}
+      <RecoveryTrainSlot data={data} date={date} ex={ex} />
       {ex.sets > 1 && (
         <div className="sets" role="group" aria-label="Sets">
           {Array.from({ length: ex.sets }, (_, i) => (

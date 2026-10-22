@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { Brain, ChartColumn, ClipboardList, Dumbbell, MessageCircle, Sun, X } from 'lucide-react';
 import { startAutoBackup, WARN_MS } from './sync/backup';
 import { syncReadiness } from './state/actions';
@@ -15,10 +15,12 @@ import { Setup } from './screens/Setup';
 import { Lock } from './screens/Lock';
 import { Ask } from './screens/Ask';
 import { About } from './screens/About';
-import { Recover } from './recovery/ui/Recover';
 import type { Data } from './engine/model';
 import type { DayView } from './engine/today';
 import type { DeviceSettings } from './db/store';
+
+// The recovery module's own screen loads as a separate file, only when it is opened.
+const Recover = lazy(() => import('./recovery/ui/Recover').then((m) => ({ default: m.Recover })));
 
 const TABS = [
   { id: 'today', label: 'Today', Icon: Sun },
@@ -104,7 +106,7 @@ export function App() {
         {tab === 'stats' && <Stats {...props} />}
         {tab === 'settings' && <Settings {...props} />}
         {tab === 'about' && <About />}
-        {recoverOn && <Recover {...props} />}
+        {recoverOn && <Suspense fallback={null}><Recover {...props} /></Suspense>}
         {!(tab in TITLES) && !recoverOn && <Today {...props} backupOld={!!backupOld} />}
       </main>
       <RestTimerBar />

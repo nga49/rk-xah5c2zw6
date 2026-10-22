@@ -130,6 +130,7 @@ export interface GuardianView {
   actions: string[];
   range: { label: string; why: string[] };
   tradeoffs: string[];
+  prevention: string[];
 }
 
 const rank: Record<PartStatus, number> = { 'not-judged': -1, maintained: 0, slowed: 1, 'at-risk': 2 };
@@ -271,12 +272,13 @@ export function guardian(date: ISODate, data: Data): GuardianView {
   const range = goalRange(goal, { ...parts, weightGap: weight.gap }, sig, date);
   const tradeoffs = [...sig.tradeoffs];
   if (protective) tradeoffs.unshift('Slowed on purpose: the injured area rests so it can heal. A re-injury would cost far more time than these weeks.');
-  return { date, goal, status: finalStatus, reason: worst[1].reason, why, protective, parts, volume, kept, paused, actions, range, tradeoffs };
+  return { date, goal, status: finalStatus, reason: worst[1].reason, why, protective, parts, volume, kept, paused, actions, range, tradeoffs, prevention: sig.prevention };
 }
 
 function actionsFor(parts: GuardianView['parts'], volume: MuscleWeek[], sig: GoalSignals): string[] {
   const out: string[] = [];
   if (sig.redFlag) out.push('Seek medical care before training the area again.');
+  if (sig.prevention.length) out.push(sig.prevention[0]);
   for (const v of volume.filter((x) => x.status === 'short' && FILL_PRIORITY.includes(x.muscle)).slice(0, 2)) {
     out.push(`${v.muscle}: ${v.target - v.projected > 0 ? `${v.target - v.projected} more sets` : `one more day`} this week to reach ${v.target} on ${v.minDays}+ days.`);
   }

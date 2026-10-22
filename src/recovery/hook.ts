@@ -7,6 +7,7 @@ import { filterSession, finish, preBuild, stopPlan, TRAVEL_KIT } from './adapt';
 import { constraintsOn, type Ctx } from './constraints';
 import { applyFills, weekPlan } from './fill';
 import { remainingWeeks } from './phases';
+import { preventionLines } from './prevention';
 import { noSignals, provideSignals, type GoalSignals } from './signals';
 import { goalLiftsOf } from './lifts';
 // Registers the wellness signals (fills off on watch or flag, Today cards).
@@ -54,7 +55,8 @@ function coarse(input: BuildInput, core: Core, ctx: Ctx): SessionPlan {
 /** What the engine tells the Goal Guardian for a date. */
 function engineSignals(date: string, data: BuildInput['data']): GoalSignals {
   const ctx = constraintsOn(date, data);
-  if (!ctx) return noSignals();
+  const prevention = preventionLines(date, data);
+  if (!ctx) return { ...noSignals(), prevention };
   const week = weekPlan(date, data, buildSessionCore);
   const goal = new Set(goalLiftsOf(date, data));
   const pausedLifts = new Map([...week.pausedLifts].filter(([l]) => goal.has(l)));
@@ -74,6 +76,7 @@ function engineSignals(date: string, data: BuildInput['data']): GoalSignals {
     redFlag: ctx.redFlag,
     tradeoffs,
     injuryWeeks: weeks,
+    prevention,
   };
 }
 
