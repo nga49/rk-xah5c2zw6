@@ -15,6 +15,7 @@ import { unitsOf } from '../engine/units';
 import type { ISODate, LiftKey } from '../plan/types';
 import type { RecordOf } from './model';
 import { goalLiftsOf } from './lifts';
+import { reassurance } from './mind';
 import { goalSignals, type GoalSignals } from './signals';
 import { addSession, floorFor, FILL_PRIORITY, FLOOR, GOAL_MUSCLES, originalCounts, performedSets, YOKE, type GoalMuscle, type MuscleCount } from './volume';
 
@@ -131,6 +132,8 @@ export interface GuardianView {
   range: { label: string; why: string[] };
   tradeoffs: string[];
   prevention: string[];
+  /** What a layoff is keeping: girths, weight, protein. */
+  reassurance: string[];
 }
 
 const rank: Record<PartStatus, number> = { 'not-judged': -1, maintained: 0, slowed: 1, 'at-risk': 2 };
@@ -272,7 +275,7 @@ export function guardian(date: ISODate, data: Data): GuardianView {
   const range = goalRange(goal, { ...parts, weightGap: weight.gap }, sig, date);
   const tradeoffs = [...sig.tradeoffs];
   if (protective) tradeoffs.unshift('Slowed on purpose: the injured area rests so it can heal. A re-injury would cost far more time than these weeks.');
-  return { date, goal, status: finalStatus, reason: worst[1].reason, why, protective, parts, volume, kept, paused, actions, range, tradeoffs, prevention: sig.prevention };
+  return { date, goal, status: finalStatus, reason: worst[1].reason, why, protective, parts, volume, kept, paused, actions, range, tradeoffs, prevention: sig.prevention, reassurance: reassurance(date, data) };
 }
 
 function actionsFor(parts: GuardianView['parts'], volume: MuscleWeek[], sig: GoalSignals): string[] {

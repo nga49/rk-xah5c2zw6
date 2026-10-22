@@ -18,6 +18,7 @@ import { FLAG_TIER, TIER_ADVICE } from './phases';
 import { insightSources } from './registry';
 import { rxDue, rxFor } from './rx';
 import { flightOn, travelDecision } from './travel';
+import { currentMode } from './fuel';
 import { activeInjuries, checkedInToday, injuryName, type ActiveInjury } from './state';
 
 export interface RecoveryDay {
@@ -128,7 +129,7 @@ function moduleInsights(date: ISODate, data: Data, ctx: Ctx): Insight[] {
     // Nutrition: a suggestion to confirm, never a rule (brief, Phase 3). Through the existing calorie action.
     const def = (a.level === 'protect' || a.level === 'load') && blockDeficit(date, data);
     const sourceId = `rec:maint:${id}`;
-    if (def && !live(data.kcalAdjust).some((k) => k.sourceId === sourceId) && !data.dismissed.has(sourceId)) {
+    if (def && currentMode(date, data) === 'cut' && !live(data.kcalAdjust).some((k) => k.sourceId === sourceId) && !data.dismissed.has(sourceId)) {
       out.push({
         id: sourceId, priority: 57, tone: 'gold', icon: 'food', area: 'nutrition', dismissible: true,
         title: `Pause the cut at maintenance while it heals? +${def.offset} kcal`,

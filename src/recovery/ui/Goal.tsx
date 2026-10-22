@@ -108,6 +108,12 @@ export function GoalPanel({ data, date }: { data: Data; date: ISODate }) {
           ))}
         </div>
       </Card>
+      {g.reassurance.length > 0 && (
+        <Card tone="moss" tint>
+          <div className="label" style={{ marginBottom: 6 }}>Kept during the layoff</div>
+          <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>{g.reassurance.map((r) => <li key={r}>{r}</li>)}</ul>
+        </Card>
+      )}
       <Card>
         <div className="label" style={{ marginBottom: 6 }}>Sets per muscle this week · done plus planned</div>
         <MuscleBars rows={goalRows} />

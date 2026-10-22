@@ -12,6 +12,7 @@ import { noSignals, provideSignals, type GoalSignals } from './signals';
 import { goalLiftsOf } from './lifts';
 // Registers the wellness signals (fills off on watch or flag, Today cards) and travel and gym context.
 import './wellness';
+import './mind';
 import { smartTravelPlan, travelLine, tripOn } from './travel';
 
 export type Core = (input: BuildInput) => SessionPlan;
