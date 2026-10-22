@@ -15,6 +15,7 @@ import { logBodyToday, logCardio, setMobility, setSteps, toggleCode, toggleTask 
 import { go } from '../state/hooks';
 import { Card, Chip, NumInput, Ring, Runes, SectionTitle, Tick, cx } from '../ui/kit';
 import { CheckinCard, InsightCard } from './parts';
+import { RecoveryTodaySlot } from '../recovery/ui/slots';
 
 export function Today({ data, view, backupOld }: ScreenProps & { backupOld: boolean }) {
   const { pos, lines } = view;
@@ -70,6 +71,8 @@ export function Today({ data, view, backupOld }: ScreenProps & { backupOld: bool
       </section>
 
       <EatToday view={view} />
+
+      <RecoveryTodaySlot data={data} view={view} place="goal" />
 
       {rest.length > 0 && (
         <section className="section" aria-label="Insights">

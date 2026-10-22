@@ -17,6 +17,7 @@ import { put } from '../db/store';
 import { go, toast } from '../state/hooks';
 import { copyText, openClaude } from '../ui/clipboard';
 import { Card, Chip, cx, Fold, Maxim, Ring, Runes, SectionTitle, Seg, Sheet } from '../ui/kit';
+import { RecoveryReviewSlot } from '../recovery/ui/slots';
 
 export function Mind({ data, view, route }: ScreenProps) {
   const { pos } = view;
@@ -289,6 +290,7 @@ function SundayReview({ open, onClose, data, date }: { open: boolean; onClose: (
             ))}
           </div>
         </Card>
+        <RecoveryReviewSlot data={data} date={date} />
         <Card tone="gold" tint>
           <div className="label">Next week</div>
           <div style={{ marginTop: 4 }}>{suggestion}</div>
