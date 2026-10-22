@@ -523,3 +523,12 @@ details.fold[open] > summary .chev { transform: rotate(90deg); }
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
   .embers { display: none; }
 }
+
+/* ---------------------------------------------------------------- recovery module (additive) */
+/* Multi-select toggles: 44 px tall, recessed like the segmented controls. */
+.picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.picks button {
+  min-height: var(--tap); padding: 6px 12px; border-radius: 3px; border: 1px solid var(--line); background: var(--well); color: var(--muted);
+  font-size: 13px; font-weight: 600; text-align: left; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.picks button[aria-pressed='true'] { color: var(--on-tone); background: var(--tone, var(--gold)); border-color: var(--tone, var(--gold)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25); }
