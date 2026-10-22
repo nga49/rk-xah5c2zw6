@@ -27,7 +27,7 @@ function niceTicks(min: number, max: number, count = 4): number[] {
   return out;
 }
 
-export function LineChart({ series, bands = [], refY, height = 170, unit = '', from, to, format = (v: number) => String(v) }: {
+export function LineChart({ series, bands = [], refY, height = 170, unit = '', from, to, format = (v: number) => String(v), yDomain }: {
   series: Series[];
   bands?: Band[];
   refY?: { y: number; label: string; tone?: Tone };
@@ -36,6 +36,8 @@ export function LineChart({ series, bands = [], refY, height = 170, unit = '', f
   from?: ISODate;
   to?: ISODate;
   format?: (v: number) => string;
+  /** Fixed y axis (e.g. a 0 to 10 pain scale). Without it the axis fits the data, as before. */
+  yDomain?: [number, number];
 }) {
   const ref = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<ISODate | null>(null);
@@ -50,8 +52,9 @@ export function LineChart({ series, bands = [], refY, height = 170, unit = '', f
     let y1 = Math.max(...ys);
     if (!Number.isFinite(y0)) { y0 = 0; y1 = 1; }
     const pad = (y1 - y0) * 0.12 || Math.max(1, Math.abs(y1) * 0.05);
+    if (yDomain) return { x0, x1, span: Math.max(1, diffDays(x1, x0)), y0: yDomain[0], y1: yDomain[1] };
     return { x0, x1, span: Math.max(1, diffDays(x1, x0)), y0: y0 - pad, y1: y1 + pad };
-  }, [all, from, to, refY]);
+  }, [all, from, to, refY, yDomain]);
   if (!dom) return <div className="muted small center" style={{ padding: 20 }}>No data yet.</div>;
   const H = height;
   const px = (x: ISODate) => M.l + ((W - M.l - M.r) * diffDays(x, dom.x0)) / dom.span;

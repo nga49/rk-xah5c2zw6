@@ -46,6 +46,8 @@ export function Today({ data, view, backupOld }: ScreenProps & { backupOld: bool
 
       <CheckinCard view={view} />
 
+      <RecoveryTodaySlot data={data} view={view} place="banner" />
+
       {safety.map((i) => (
         <InsightCard key={i.id} insight={i} date={view.date} />
       ))}
