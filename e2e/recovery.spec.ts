@@ -48,14 +48,20 @@ test('module on: every new screen fits the phone width, with no console errors, 
   await page.goto('./#/today');
   await expect(page.getByRole('button', { name: 'Wellness' })).toBeVisible();
 
-  // Log a synthetic injury.
-  await page.goto('./#/recover/injury/new');
-  await page.getByLabel('Body region').selectOption('calf');
-  await page.getByRole('group', { name: 'Side' }).getByRole('button', { name: 'Right' }).click();
+  // Log a synthetic injury with the guided steps: warning signs must be answered, never ticked for you.
   await page.getByRole('button', { name: 'Log injury' }).click();
+  await page.getByLabel('Body area').selectOption('calf');
+  await page.getByRole('group', { name: 'Side' }).getByRole('button', { name: 'Right' }).click();
+  for (let i = 0; i < 3; i++) await page.getByRole('button', { name: /Next/ }).click();
+  await expect(page.getByRole('button', { name: /Next/ })).toBeDisabled();
+  await page.getByRole('button', { name: 'None of these' }).click();
+  await page.getByRole('button', { name: /Next/ }).click();
+  await expect(page.getByText(/you can train|Rest day/i).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Save injury' }).click();
   await expect(page.getByText('Right calf').first()).toBeVisible();
+  await expect(page.getByText('Warning sign:')).toHaveCount(0);
 
-  for (const hash of ['#/recover', '#/recover/injury/new', '#/recover/wellness', '#/recover/goal', '#/today', '#/train', '#/mind/review']) {
+  for (const hash of ['#/recover', '#/recover/injury/new', '#/recover/injury/full', '#/recover/wellness', '#/recover/goal', '#/today', '#/train', '#/mind/review']) {
     await page.goto(`./${hash}`);
     await page.waitForTimeout(200);
     expect(await overflow(page), hash).toBeLessThanOrEqual(0);
@@ -67,8 +73,8 @@ test('module on: every new screen fits the phone width, with no console errors, 
   await expect(page.getByText(/Upper only/).first()).toBeVisible();
 
   // The daily check-in opens from the banner and saves.
-  await page.getByRole('button', { name: 'Injury check-in · 30 s' }).first().click();
-  await page.getByRole('group', { name: 'Pain at rest, 0 to 10' }).getByRole('button', { name: '1', exact: true }).click();
+  await page.getByRole('button', { name: 'Morning check-in · 30 s' }).first().click();
+  await page.getByRole('group', { name: 'Pain at rest, this morning, 0 to 10' }).getByRole('button', { name: '1', exact: true }).click();
   await page.getByRole('button', { name: 'Save check-in' }).click();
   await expect(page.getByText('Check-in saved')).toBeVisible();
 

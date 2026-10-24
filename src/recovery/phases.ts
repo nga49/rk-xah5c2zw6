@@ -39,7 +39,9 @@ const worst = (c: InjuryCheckin) => Math.max(c.painRest ?? 0, c.painWalk ?? 0);
 
 /** Rest or walking pain rising on 3 check-ins in a row counts as "pain getting worse over days". */
 export function derivedFlags(a: ActiveInjury): RedFlag[] {
-  const last = a.checkins.filter((c) => c.painRest != null || c.painWalk != null).slice(-3);
+  // Only check-ins after the last assessment count: being seen clears this flag like any other.
+  const seen = a.events.filter((e) => e.event === 'assessed' || e.event === 'cleared').at(-1)?.date;
+  const last = a.checkins.filter((c) => (!seen || c.date > seen) && (c.painRest != null || c.painWalk != null)).slice(-3);
   if (last.length === 3 && worst(last[0]) < worst(last[1]) && worst(last[1]) < worst(last[2])) return ['pain-worse-over-days'];
   return [];
 }

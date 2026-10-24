@@ -9,6 +9,7 @@ import { saveRecord } from '../actions';
 import { guardian, resolveGoal, STATUS_TONE, STATUS_WORD, type GoalStatus, type GuardianView, type MuscleWeek } from '../goal';
 import type { RecordOf } from '../model';
 import { YOKE } from '../volume';
+import { constraintsOn } from '../constraints';
 
 const ICON: Record<GoalStatus, typeof ShieldCheck> = { maintained: ShieldCheck, slowed: TrendingDown, 'at-risk': ShieldAlert };
 
@@ -78,6 +79,32 @@ export function GoalCard({ data, date }: { data: Data; date: ISODate }) {
           </div>
           <div className="tiny muted">Estimates, not promises. Not medical advice.</div>
         </div>
+      </Card>
+    </section>
+  );
+}
+
+/** Recover screen: "Is my program affected?" in plain words. Nothing shows when no injury or block is on. */
+export function ProgramImpact({ data, date }: { data: Data; date: ISODate }) {
+  const g = useGuardian(data, date);
+  const ctx = constraintsOn(date, data);
+  if (!ctx?.areas.length && !ctx?.block) return null;
+  const paused = g.volume.filter((v) => v.status === 'paused').map((v) => v.muscle);
+  const kept = g.volume.filter((v) => v.status === 'met' && v.muscle !== 'Core');
+  const short = g.volume.filter((v) => v.status === 'short' && v.muscle !== 'Core');
+  return (
+    <section className="section" aria-label="Program impact">
+      <SectionTitle>Is my program affected?</SectionTitle>
+      <Card>
+        <div className="small"><b>Your plan keeps running:</b> same blocks, weeks and loads. Only exercises that load the injured area are paused or swapped, and their sets go to your goal priorities, yoke first.</div>
+        {paused.length > 0 && <div className="small" style={{ marginTop: 8 }}><span className="muted">Resting this week:</span> {paused.join(', ')}.</div>}
+        {kept.length > 0 && <div className="small" style={{ marginTop: 4 }}><span className="muted">On track this week:</span> {kept.map((v) => `${v.muscle} ${v.projected}/${v.target}`).join(', ')}.</div>}
+        {short.length > 0 && <div className="small" style={{ marginTop: 4 }}><span className="muted">Behind this week (missed sessions count too):</span> {short.slice(0, 4).map((v) => `${v.muscle} ${v.projected}/${v.target}`).join(', ')}{short.length > 4 ? ` and ${short.length - 4} more` : ''}.</div>}
+        <div className="small" style={{ marginTop: 8 }}><span className="muted">Goal:</span> <b className={`t-${STATUS_TONE[g.status]}`} style={{ color: 'var(--tone)' }}>{STATUS_WORD[g.status]}</b>. {g.reason}</div>
+        <div className="small" style={{ marginTop: 4 }}><span className="muted">Goal date:</span> <b>{g.range.label}</b></div>
+        <ul className="tiny muted steps-list">{g.range.why.map((w) => <li key={w}>{w}</li>)}</ul>
+        {g.tradeoffs[0] && <div className="small" style={{ color: 'var(--gold)', marginTop: 6 }}>{g.tradeoffs[0]}</div>}
+        <div className="tiny muted" style={{ marginTop: 6 }}>Estimates, not promises. Not medical advice.</div>
       </Card>
     </section>
   );

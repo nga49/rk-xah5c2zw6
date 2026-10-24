@@ -4,7 +4,7 @@ import type { Data } from '../../engine/model';
 import { addDays, formatMedium } from '../../engine/dates';
 import type { ISODate } from '../../plan/types';
 import { go, toast } from '../../state/hooks';
-import { Card, Chip, Field, NumInput, Sheet, SectionTitle, Toggle } from '../../ui/kit';
+import { Card, Chip, Field, Fold, NumInput, Sheet, SectionTitle, Toggle } from '../../ui/kit';
 import { saveRecord, saveWellness } from '../actions';
 import { SIGN_LABEL, WELLNESS_SIGNS, type WellnessSign } from '../model';
 import { coachTips, FATIGUE_TONE, FATIGUE_WORD, fatigueOn } from '../wellness';
@@ -58,7 +58,9 @@ export function WellnessSection({ data, date }: { data: Data; date: ISODate }) {
           <button className="btn block" style={{ marginTop: 8 }} onClick={() => void end()}>End it today</button>
         </Card>
       )}
-      <CoachCard data={data} date={date} />
+      <Fold title={<span className="label">Recovery coach tips</span>} open={f.level !== 'none'}>
+        <CoachCard data={data} date={date} />
+      </Fold>
     </section>
   );
 }

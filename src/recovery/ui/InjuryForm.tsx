@@ -10,7 +10,8 @@ import {
   FLAG_LABEL, FUNCTIONAL_TESTS, INJURY_TYPES, MOVEMENT_LABEL, MOVEMENTS, RED_FLAGS, REGION_LABEL, REGIONS, STATUS_LABEL, TEST_LABEL, TYPE_LABEL,
   type Felt, type FunctionalTest, type Injury, type InjuryStatus, type InjuryType, type Movement, type RedFlag, type Region, type Side,
 } from '../model';
-import { activeInjuries } from '../state';
+import { activeInjuries, injuryName } from '../state';
+import { formatMedium } from '../../engine/dates';
 import { InjuryHistory } from './History';
 import { ReportButton, RxEditor } from './RxEditor';
 import { NotMedical } from './NotMedical';
@@ -50,7 +51,8 @@ export function InjuryForm({ data, date, id }: { data: Data; date: ISODate; id?:
   const [rom, setRom] = useState<'full' | 'reduced' | 'very-reduced' | undefined>(at?.rom);
   const [tests, setTests] = useState<Tests>(at?.tests ?? {});
   const others = activeInjuries(start ?? date, data).filter((a) => a.injury.id !== id);
-  const [flags, setFlags] = useState<RedFlag[]>(at?.flags ?? (!id && others.length ? ['new-on-existing'] : []));
+  // Never ticked for you: a warning sign is only ever something you report.
+  const [flags, setFlags] = useState<RedFlag[]>(at?.flags ?? []);
   const [status, setStatus] = useState<InjuryStatus>(existing?.status ?? 'acute');
   const [expected, setExpected] = useState<ISODate | undefined>(existing?.expectedReturn);
   const [otherSide, setOtherSide] = useState(!!existing?.trainOtherSide);
@@ -110,7 +112,7 @@ export function InjuryForm({ data, date, id }: { data: Data; date: ISODate; id?:
             <Seg label="Kind" tone="frost" value={kind} onChange={setKind} options={[{ value: 'episode', label: 'New injury' }, { value: 'longTerm', label: 'Long-term limit' }]} />
           </Field>
           {kind === 'longTerm' && <Toggle on={applyToPlan} onChange={setApplyToPlan} label="Also remove plan exercises" sub="Off: it only limits what the module adds. On: plan exercises that load it are swapped too." />}
-          {others.length > 0 && kind === 'episode' && <div className="small" style={{ color: 'var(--ember)' }}>Another injury is still active. A new one on top of it is a red flag: ticked below.</div>}
+          {kind === 'episode' && <SameInjury others={others} region={region} side={side} />}
         </div>
       </Card>
 
@@ -204,4 +206,19 @@ export function InjuryForm({ data, date, id }: { data: Data; date: ISODate; id?:
       <div className="tiny muted">Stored on this phone and in your private backup only. The more you fill in, the more precise the plan; with few fields it stays conservative.</div>
     </div>
   );
+}
+
+/** Warn before logging the same injury twice; a new injury on top of another is a warning sign you tick yourself. */
+export function SameInjury({ others, region, side }: { others: ReturnType<typeof activeInjuries>; region?: Region; side?: Side }) {
+  if (!others.length) return null;
+  const same = others.find((o) => o.injury.region === region && (o.injury.side === side || !side));
+  if (same) {
+    return (
+      <div className="small" style={{ color: 'var(--gold)' }}>
+        You already logged this one ({injuryName(same.injury)}, {formatMedium(same.injury.start)}).{' '}
+        <button className="link-btn" style={{ padding: 0, minHeight: 0 }} onClick={() => go(`recover/injury/${same.injury.id}`)}>Open it instead</button>
+      </div>
+    );
+  }
+  return <div className="small muted">Another injury is still active ({others.map((o) => injuryName(o.injury)).join(', ')}). If this one came on top of it, tick that warning sign below.</div>;
 }

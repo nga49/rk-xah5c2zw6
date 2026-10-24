@@ -244,7 +244,7 @@ export function goalRange(goal: GoalDef, parts: GuardianView['parts'] & { weight
   }
   if (sig.injuryWeeks) {
     slipWeeks += sig.injuryWeeks[1];
-    why.push(`Injured area out for ${sig.injuryWeeks[0]} to ${sig.injuryWeeks[1]} more weeks (typical ranges, individual times vary).`);
+    why.push(`Injured area may be out for ${sig.injuryWeeks[0]} to ${sig.injuryWeeks[1]} more weeks (rough planning range, not a medical estimate; individual times vary).`);
   }
   if (sig.redFlag) why.push('Open red flag: the range is unreliable until you have been seen.');
   const end = addDays(goal.to, slipWeeks * 7);

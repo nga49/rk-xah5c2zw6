@@ -532,3 +532,29 @@ details.fold[open] > summary .chev { transform: rotate(90deg); }
   font-size: 13px; font-weight: 600; text-align: left; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 .picks button[aria-pressed='true'] { color: var(--on-tone); background: var(--tone, var(--gold)); border-color: var(--tone, var(--gold)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+
+/* iPhone Safari gives date and time fields their own minimum width and centred text, so they spill out of
+   cards. Reset the native look; the field then follows the card width like every other input. */
+input.input[type='date'],
+input.input[type='time'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  line-height: 1.3;
+  text-align: left;
+}
+input.input[type='date']::-webkit-date-and-time-value,
+input.input[type='time']::-webkit-date-and-time-value { text-align: left; min-height: 1.3em; }
+.field { min-width: 0; }
+
+/* Recovery module: phase track and warning-sign box. */
+.phase-track { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-top: 8px; }
+.phase-track span { display: inline-flex; align-items: center; gap: 2px; padding: 4px 6px; border-radius: 3px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.phase-track span.done { color: var(--moss); }
+.phase-track span.now { color: var(--on-tone); background: var(--gold); }
+.phase-track span.now.stop { background: var(--ember); }
+.flag-box { margin-top: 10px; padding: 12px; border: 1px solid var(--ember); border-radius: var(--radius); background: rgba(227, 90, 53, 0.08); }
+.steps-list { margin: 6px 0 0; padding-left: 18px; }
+.steps-list li { margin-top: 4px; }
