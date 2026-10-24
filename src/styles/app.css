@@ -424,6 +424,8 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.4; }
 .streak .d { aspect-ratio: 1 / 1.6; border-radius: 2px; background: var(--well); border: 1px solid var(--line); position: relative; overflow: hidden; }
 .streak .d .fill { position: absolute; left: 0; right: 0; bottom: 0; background: var(--tone, var(--ash)); opacity: 0.85; }
 .streak .d.today { outline: 1.5px solid var(--gold); outline-offset: 1px; }
+.streak button.d { appearance: none; -webkit-appearance: none; padding: 0; margin: 0; width: 100%; font: inherit; color: inherit; cursor: pointer; }
+.streak button.d:focus-visible { outline: 2px solid var(--frost); outline-offset: 1px; }
 .streak-labels { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; font-size: 10px; color: var(--muted); text-align: center; }
 .heat { display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 3px; }
 .heat .c { aspect-ratio: 1; border-radius: 2px; background: var(--well); border: 1px solid var(--seam); }

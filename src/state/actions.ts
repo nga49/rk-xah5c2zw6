@@ -6,7 +6,7 @@ import type { InsightAction } from '../engine/insights';
 import type { CardioType, Checkin, DayRecord, Feel, Mark, ReadinessSnapshot, SessionType } from '../engine/model';
 import type { PlannedExercise, SessionPlan } from '../engine/session';
 import type { DayView } from '../engine/today';
-import type { ISODate, LiftKey } from '../plan/types';
+import type { ISODate, LiftKey, SessionCode } from '../plan/types';
 import { DAILY_CODE } from '../plan';
 import { toast } from './hooks';
 
@@ -90,6 +90,11 @@ export async function finishSession(date: ISODate, plan: SessionPlan, view: DayV
   const readiness: ReadinessSnapshot | undefined = d.readiness ? { score: d.readiness.score, type: d.type, reasons: [d.reason], overridden: d.overridden } : undefined;
   await patchDay(date, { sessionDone: true, sessionCode: plan.code, feedback: { rpe, lifts }, ...(readiness ? { readiness } : {}) });
   toast('Session saved');
+}
+
+/** A past session ticked off afterwards: marked done, with no weights or feedback invented. */
+export async function markSessionDone(date: ISODate, code: SessionCode): Promise<void> {
+  await patchDay(date, { sessionDone: true, sessionCode: code });
 }
 
 export async function reopenSession(date: ISODate): Promise<void> {

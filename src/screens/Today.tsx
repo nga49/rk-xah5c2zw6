@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
-import { ChevronRight, CloudOff, Plus } from 'lucide-react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, CloudOff, Pencil, Plus, X } from 'lucide-react';
 import type { ScreenProps } from '../App';
-import { addDays, formatLong, weekdayShort } from '../engine/dates';
+import { pastDay, stepsMissing } from '../engine/backfill';
+import { addDays, diffDays, formatLong, formatShort, formatSleep, weekdayShort } from '../engine/dates';
 import { fmtInt } from '../engine/formulas';
 import type { CardioType, Data } from '../engine/model';
 import { CARDIO_TYPES, live } from '../engine/model';
@@ -10,14 +11,16 @@ import { completion, type Task } from '../engine/tasks';
 import { computeDay, type DayView } from '../engine/today';
 import { unitsOf } from '../engine/units';
 import { DAILY_CODE, PHASE_LABEL, PHASE_TONE, SEASONS, TPL_LABEL, TPL_TONE } from '../plan';
-import type { ISODate } from '../plan/types';
-import { logBodyToday, logCardio, setMobility, setSteps, toggleCode, toggleTask } from '../state/actions';
+import type { ISODate, SessionCode } from '../plan/types';
+import { dismiss, logBodyToday, logCardio, markSessionDone, reopenSession, setMobility, setSteps, syncReadiness, toggleCode, toggleTask } from '../state/actions';
 import { go } from '../state/hooks';
-import { Card, Chip, NumInput, Ring, Runes, SectionTitle, Tick, cx } from '../ui/kit';
-import { CheckinCard, InsightCard } from './parts';
+import { Card, Chip, Fold, NumInput, Ring, Runes, SectionTitle, Tick, cx } from '../ui/kit';
+import { CheckinCard, CheckinForm, InsightCard } from './parts';
 import { RecoveryTodaySlot } from '../recovery/ui/slots';
 
-export function Today({ data, view, backupOld }: ScreenProps & { backupOld: boolean }) {
+export function Today({ data, view, route, backupOld }: ScreenProps & { backupOld: boolean }) {
+  const past = pastDay(route[1], view.date);
+  if (past) return <PastDay key={past} data={data} date={past} today={view.date} />;
   const { pos, lines } = view;
   const safety = view.insights.filter((i) => i.area === 'safety');
   const rest = view.insights.filter((i) => i.area !== 'safety').slice(0, Math.max(0, 3 - safety.length));
@@ -51,6 +54,8 @@ export function Today({ data, view, backupOld }: ScreenProps & { backupOld: bool
       {safety.map((i) => (
         <InsightCard key={i.id} insight={i} date={view.date} />
       ))}
+
+      <StepsMissing data={data} date={view.date} />
 
       <section className="section" aria-label="Training tasks">
         <SectionTitle right={<span className="small muted">{done(view.tasks.training)}</span>}>Training</SectionTitle>
@@ -281,6 +286,131 @@ function EatToday({ view }: { view: DayView }) {
   );
 }
 
+/** Recent days with no steps: one tap opens the day to add them. */
+function StepsMissing({ data, date }: { data: Data; date: ISODate }) {
+  const days = stepsMissing(date, data);
+  const id = `steps-missing:${days.join(',')}`;
+  if (!days.length || data.dismissed.has(id)) return null;
+  return (
+    <Card tone="gold" toned>
+      <div className="row between" style={{ alignItems: 'flex-start' }}>
+        <div className="grow">
+          <div style={{ fontWeight: 700 }}>Steps not logged</div>
+          <div className="small muted" style={{ marginTop: 2 }}>Until you add them, these days count the steps task as missed.</div>
+        </div>
+        <button className="icon-btn" aria-label="Dismiss" onClick={() => void dismiss(id, date)} style={{ margin: '-10px -10px 0 0' }}>
+          <X size={18} />
+        </button>
+      </div>
+      <div className="row wrap" style={{ gap: 6, marginTop: 8 }}>
+        {days.map((d) => (
+          <button key={d} className="btn small" onClick={() => go(`today/${d}`)}>
+            {weekdayShort(d)} {formatShort(d)}
+          </button>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+/** A day already gone: everything that can still be logged for it, on one screen. */
+function PastDay({ data, date, today }: { data: Data; date: ISODate; today: ISODate }) {
+  const v = useMemo(() => computeDay(date, data, new Date(`${date}T12:00:00`)), [data, date]);
+  const saved = data.days.get(date)?.readiness;
+  const ago = diffDays(today, date);
+  const next = addDays(date, 1);
+  useLayoutEffect(() => window.scrollTo(0, 0), []);
+  // A check-in added afterwards also gets its readiness snapshot (the colour in the strip); one already saved is kept.
+  useEffect(() => {
+    if (v.decision.readiness && !saved) void syncReadiness(v);
+  }, [v, saved]);
+  const training = v.tasks.training.filter((t) => t.id !== 'checkin');
+  return (
+    <div className="stack">
+      <div className="row" style={{ gap: 4 }}>
+        <button className="icon-btn" aria-label="Previous day" onClick={() => go(`today/${addDays(date, -1)}`)}>
+          <ChevronLeft size={22} />
+        </button>
+        <div className="grow center">
+          <div className="h-date">{formatLong(date)}</div>
+          <div className="small muted">{ago === 1 ? 'Yesterday' : `${ago} days ago`}</div>
+        </div>
+        <button className="icon-btn" aria-label="Next day" onClick={() => go(next >= today ? 'today' : `today/${next}`)}>
+          <ChevronRight size={22} />
+        </button>
+      </div>
+      <div className="small muted">Forgot something? Fill it in here. Averages, the 14-day strip and habit scores update straight away.</div>
+
+      <PastCheckin view={v} />
+
+      <section className="section" aria-label="Training tasks">
+        <SectionTitle right={<span className="small muted">{done(training)}</span>}>Training</SectionTitle>
+        <Card>
+          <div className="tasks">
+            {training.map((t) => (t.id === 'session' ? <PastSession key={t.id} task={t} date={date} code={v.session.code} /> : <TaskRow key={t.id} task={t} date={date} data={data} />))}
+          </div>
+        </Card>
+      </section>
+
+      {v.tasks.mind.length > 0 && (
+        <section className="section" aria-label="Mind tasks">
+          <SectionTitle right={<span className="small muted">{done(v.tasks.mind)}</span>}>Mind</SectionTitle>
+          <Card>
+            <div className="tasks">
+              {v.tasks.mind.map((t) => <TaskRow key={t.id} task={t} date={date} data={data} />)}
+            </div>
+          </Card>
+        </section>
+      )}
+
+      <button className="btn block" onClick={() => go('today')}>Back to today</button>
+    </div>
+  );
+}
+
+function PastCheckin({ view }: { view: DayView }) {
+  const [editing, setEditing] = useState(false);
+  const c = view.checkin;
+  if (c && !editing) {
+    return (
+      <Card>
+        <div className="row between">
+          <div className="small">
+            <span className="label">Check-in</span> {formatSleep(c.sleepMin)} · score {c.sleepScore} · energy {c.energy}
+          </div>
+          <button className="link-btn row" style={{ gap: 4 }} onClick={() => setEditing(true)}>
+            <Pencil size={14} /> Edit
+          </button>
+        </div>
+      </Card>
+    );
+  }
+  return (
+    <Card toned tone="frost">
+      <Fold title={<span className="label">Morning check-in{c ? '' : ' · not logged'}</span>} open={editing}>
+        <CheckinForm date={view.date} initial={c} onDone={() => setEditing(false)} />
+      </Fold>
+    </Card>
+  );
+}
+
+/** The session row of a past day: a tick marks it done, nothing else is filled in. */
+function PastSession({ task, date, code }: { task: Task; date: ISODate; code: SessionCode | null }) {
+  const onTick = (on: boolean) => {
+    if (!code) void toggleTask(date, 'session', on);
+    else void (on ? markSessionDone(date, code) : reopenSession(date));
+  };
+  return (
+    <div className={cx('task', task.done && 'done', `t-${task.tone}`)}>
+      <Tick on={task.done} tone={task.tone} label={task.label} onChange={onTick} />
+      <div className="body">
+        <div className="title">{task.label}</div>
+        <div className="sub">{code ? (task.done ? 'Done' : 'Trained that day? Tick it. Weights are not added.') : task.sub}</div>
+      </div>
+    </div>
+  );
+}
+
 function Streak({ data, date }: { data: Data; date: ISODate }) {
   const days = useMemo(() => {
     const out: { date: ISODate; tone: string; fill: number }[] = [];
@@ -299,12 +429,18 @@ function Streak({ data, date }: { data: Data; date: ISODate }) {
   }, [data, date]);
   return (
     <section className="section" aria-label="Last 14 days">
-      <SectionTitle>Last 14 days</SectionTitle>
+      <SectionTitle right={<span className="small muted">Tap a day to fill it in</span>}>Last 14 days</SectionTitle>
       <div className="streak">
         {days.map((d) => (
-          <div key={d.date} className={cx('d', `t-${d.tone}`, d.date === date && 'today')} title={`${d.date}: ${Math.round(d.fill * 100)}%`}>
+          <button
+            key={d.date}
+            type="button"
+            className={cx('d', `t-${d.tone}`, d.date === date && 'today')}
+            aria-label={`${formatLong(d.date)}: ${Math.round(d.fill * 100)}% done${d.date === date ? ', today' : ''}`}
+            onClick={() => go(d.date === date ? 'today' : `today/${d.date}`)}
+          >
             <div className="fill" style={{ height: `${Math.round(d.fill * 100)}%` }} />
-          </div>
+          </button>
         ))}
       </div>
       <div className="streak-labels" aria-hidden="true">

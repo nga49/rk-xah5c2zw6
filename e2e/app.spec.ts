@@ -132,7 +132,7 @@ test('every screen fits the phone width (no horizontal scroll) and has no consol
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   await page.clock.setFixedTime(new Date('2026-10-21T08:00:00'));
   await setup(page);
-  for (const hash of ['#/today', '#/train', '#/mind', '#/log/activity', '#/log/sleep', '#/log/max', '#/log/body', '#/log/standards', '#/stats', '#/settings', '#/about']) {
+  for (const hash of ['#/today', '#/today/2026-10-19', '#/train', '#/mind', '#/log/activity', '#/log/sleep', '#/log/max', '#/log/body', '#/log/standards', '#/stats', '#/settings', '#/about']) {
     await page.goto(`./${hash}`);
     await page.waitForTimeout(150);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -141,6 +141,38 @@ test('every screen fits the phone width (no horizontal scroll) and has no consol
   await page.goto('./#/settings');
   await expect(page.getByText('Not medical advice.', { exact: false }).first()).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test('a forgotten day can be filled in afterwards', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-19T07:30:00'));
+  await setup(page);
+  await checkIn(page, { h: '7', m: '50', score: '84', energy: '4', stress: '2' });
+
+  await at(page, '2026-10-22T08:00:00');
+  const card = page.locator('.card', { hasText: 'Steps not logged' });
+  await expect(card.getByRole('button', { name: 'Mon 19 Oct' })).toBeVisible();
+  await card.getByRole('button', { name: 'Tue 20 Oct' }).click();
+
+  await expect(page.getByText('Tuesday 20 October')).toBeVisible();
+  await expect(page.getByText('2 days ago')).toBeVisible();
+  await page.getByLabel('Steps from Garmin').fill('11200');
+  await page.getByRole('button', { name: 'Save steps' }).click();
+  await expect(page.getByRole('checkbox', { name: 'Steps 10,000' })).toHaveAttribute('aria-checked', 'true');
+  const session = page.getByRole('checkbox', { name: /LEVIATHAN/ });
+  await session.click();
+  await expect(session).toHaveAttribute('aria-checked', 'true');
+
+  await page.getByRole('button', { name: 'Previous day' }).click();
+  await expect(page.getByText('Monday 19 October')).toBeVisible();
+  await page.getByRole('button', { name: 'Back to today' }).click();
+  await expect(card.getByRole('button', { name: 'Tue 20 Oct' })).toHaveCount(0);
+  await expect(card.getByRole('button', { name: 'Wed 21 Oct' })).toBeVisible();
+
+  await page.getByRole('button', { name: /Wednesday 21 October/ }).click();
+  await expect(page.getByText('Yesterday')).toBeVisible();
+  await page.getByRole('button', { name: 'Next day' }).click();
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
+  await expect(page.getByText('Thursday 22 October')).toBeVisible();
 });
 
 test('opens offline after the first visit (service worker)', async ({ page, context }) => {

@@ -1,5 +1,12 @@
 # Changelog
 
+## Fill in a past day
+
+- Tap any day in the Last 14 days strip on Today to open it. You can add steps, mobility, cardio, weigh-in, habits, the daily code and the morning check-in for that day, and tick a session you trained but forgot to finish. Arrows move day by day; Back to today returns.
+- Today shows a "Steps not logged" card when a day in the last week has no steps, with one button per day. It can be dismissed.
+- Everything recalculates from the saved entries, so the strip, habit scores and averages update as soon as a day is filled in. A session ticked afterwards is marked done; no weights are invented for it.
+- The build now minifies with Terser, set never to generate a short name that the privacy scan rejects.
+
 ## Injury and recovery module (feature branch, off by default)
 
 - One switch in Settings; off gives the original plan exactly, proven by a fingerprint of every plan day taken before any change.

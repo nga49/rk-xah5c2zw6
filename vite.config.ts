@@ -75,6 +75,9 @@ export default defineConfig({
     sourcemap: false,
     assetsInlineLimit: 0,
     chunkSizeWarningLimit: 800,
+    // Terser, because it can be told never to generate a short name the privacy scan rejects (scripts/privacy-scan.mjs).
+    minify: 'terser',
+    terserOptions: { mangle: { reserved: ['L4'] } },
   },
   test: {
     environment: 'node',
