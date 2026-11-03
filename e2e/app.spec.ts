@@ -175,6 +175,36 @@ test('a forgotten day can be filled in afterwards', async ({ page }) => {
   await expect(page.getByText('Thursday 22 October')).toBeVisible();
 });
 
+test('sheets open above everything: the top choice can be tapped', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-20T07:30:00'));
+  await setup(page);
+  await checkIn(page, { h: '7', m: '50', score: '84', energy: '4', stress: '2' });
+  await page.getByRole('button', { name: 'Change' }).first().click();
+  const sheet = page.getByRole('dialog', { name: "Today's session type" });
+  await expect(sheet).toBeInViewport();
+  await sheet.getByRole('button', { name: /Moderate/ }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(page.getByText('Your call (suggested Full)').first()).toBeVisible();
+});
+
+test('a missed heavy session stays on offer in Train, even after closing the card', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-26T20:00:00'));
+  await setup(page);
+  await at(page, '2026-10-27T07:30:00');
+  await checkIn(page, { h: '7', m: '50', score: '84', energy: '4', stress: '2' });
+  const card = page.locator('.card', { hasText: 'BLADES today?' });
+  await expect(card).toBeVisible();
+  await card.getByRole('button', { name: 'Dismiss' }).click();
+  await expect(card).toHaveCount(0);
+
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Train' }).click();
+  await expect(page.getByText('Missed on Monday. Do it today instead of LEVIATHAN; the rest of the week slides.')).toBeVisible();
+  await expect(page.getByText('Skipped this week: GUARDIAN')).toBeVisible();
+  await page.getByRole('button', { name: 'Do BLADES today' }).click();
+  await expect(page.locator('.band .n')).toHaveText('BLADES');
+  await expect(page.getByRole('button', { name: 'Do BLADES today' })).toHaveCount(0);
+});
+
 test('opens offline after the first visit (service worker)', async ({ page, context }) => {
   await page.clock.setFixedTime(new Date('2026-10-21T08:00:00'));
   await setup(page);

@@ -14,7 +14,7 @@ import { BLOCKS, LIFTS, PHASE_LABEL, PHASE_TONE, SESSION_TONE, TPL_LABEL, TPL_TO
 import { BACK_RESET, MOBILITY_DAILY } from '../plan/content';
 import { takesLoad } from '../plan/exercises';
 import type { ISODate, LiftKey } from '../plan/types';
-import { finishSession, logCardio, logExercise, markExercise, pausePlan, reopenSession, resumePlan, setMobility, setTravel, tickSet, unlogExercise } from '../state/actions';
+import { applyAction, finishSession, logCardio, logExercise, markExercise, pausePlan, reopenSession, resumePlan, setMobility, setTravel, tickSet, unlogExercise } from '../state/actions';
 import { go, startRest } from '../state/hooks';
 import { Card, Chip, Fold, NumInput, Seg, Sheet, SectionTitle, Tick, Toggle, Why, cx } from '../ui/kit';
 import { DecisionBadge, InsightCard } from './parts';
@@ -31,7 +31,8 @@ export function Train({ data, view, route }: ScreenProps) {
   const { session } = view;
   const [pauseOpen, setPauseOpen] = useState(route[1] === 'pause');
   const day = data.days.get(view.date);
-  const sessionInsights = view.insights.filter((i) => i.area === 'session' || i.area === 'safety');
+  // The missed-session offer has its own card below, so it never drops out or stays closed.
+  const sessionInsights = view.insights.filter((i) => (i.area === 'session' || i.area === 'safety') && i.id !== view.offer?.id);
   const adjustments = useMemo(() => {
     const out: string[] = [];
     for (const lift of session.feedbackLifts) {
@@ -44,6 +45,7 @@ export function Train({ data, view, route }: ScreenProps) {
   return (
     <div className="stack">
       <DecisionBadge view={view} />
+      <MissedSession view={view} />
       {sessionInsights.slice(0, 3).map((i) => (
         <InsightCard key={i.id} insight={i} date={view.date} />
       ))}
@@ -358,6 +360,22 @@ function CardioMobility({ view, data }: { view: DayView; data: Data }) {
         </ul>
       </Card>
     </section>
+  );
+}
+
+/** A heavy session missed earlier this week, offered in place of today's for as long as it can be. */
+function MissedSession({ view }: { view: DayView }) {
+  const o = view.offer;
+  if (!o) return null;
+  return (
+    <Card tone="frost" toned>
+      <div style={{ fontWeight: 700 }}>{o.missed} today?</div>
+      <div className="small muted" style={{ marginTop: 2 }}>Missed on {weekdayName(o.missedOn)}. Do it today instead of {view.code}; the rest of the week slides.</div>
+      {o.lines.length > 0 && <ul className="small steps-list">{o.lines.map((l) => <li key={l}>{l}</li>)}</ul>}
+      <button className="btn primary block" style={{ marginTop: 10 }} onClick={() => void applyAction({ kind: 'acceptSwap', offer: o }, view.date)}>
+        Do {o.missed} today
+      </button>
+    </Card>
   );
 }
 

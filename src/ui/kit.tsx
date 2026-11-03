@@ -1,4 +1,5 @@
 import { useEffect, useId, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Bed, Check, ChevronRight, Dumbbell, Feather, Flame, Gauge, Info, Moon, Plane, Shield, X } from 'lucide-react';
 import type { SessionType } from '../engine/model';
 import { sessionTone } from '../engine/readiness';
@@ -285,7 +286,8 @@ export function Sheet({ open, title, onClose, children }: { open: boolean; title
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
   if (!open) return null;
-  return (
+  // Drawn at the end of <body>: inside a screen, the screen's entrance animation would trap it under the header.
+  return createPortal(
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" role="dialog" aria-modal="true" aria-labelledby={id} onClick={(e) => e.stopPropagation()}>
         <div className="grab" />
@@ -299,7 +301,8 @@ export function Sheet({ open, title, onClose, children }: { open: boolean; title
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

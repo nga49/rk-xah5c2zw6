@@ -1,5 +1,10 @@
 # Changelog
 
+## Fixes: pop-up sheets, missed sessions
+
+- Pop-up sheets (session type, check-ins, finish session and others) open above the whole screen again. The screens' entrance animation had trapped them under the header, so the top choices could not be tapped.
+- A heavy session missed earlier in the week now has its own card at the top of Train ("BLADES today?") for as long as it can be done. Closing the card on Today, or other cards taking its place there, no longer hides it.
+
 ## Fill in a past day
 
 - Tap any day in the Last 14 days strip on Today to open it. You can add steps, mobility, cardio, weigh-in, habits, the daily code and the morning check-in for that day, and tick a session you trained but forgot to finish. Arrows move day by day; Back to today returns.
