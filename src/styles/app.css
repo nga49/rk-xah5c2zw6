@@ -403,6 +403,8 @@ textarea.input { min-height: 80px; resize: vertical; line-height: 1.4; }
   padding: 8px 16px calc(var(--safe-bottom) + 20px); animation: rise 0.28s var(--ease);
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 var(--trim-soft);
 }
+.choice { display: block; width: 100%; text-align: left; padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--well); color: inherit; font: inherit; }
+.choice.now { border-color: var(--frost); }
 .sheet .grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 4px auto 10px; }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }

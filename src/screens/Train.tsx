@@ -1,23 +1,24 @@
 import { useMemo, useState } from 'react';
-import { Check, Minus, Pause, Plane, Plus } from 'lucide-react';
+import { Check, Minus, Pause, Plane, Plus, Shuffle, Undo2 } from 'lucide-react';
 import type { ScreenProps } from '../App';
-import { addDays, diffDays, formatShort, startOfWeek, weekdayName, weekdayShort } from '../engine/dates';
+import { addDays, diffDays, formatShort, startOfWeek, weekday, weekdayName, weekdayShort } from '../engine/dates';
 import { e1rmFor } from '../engine/loads';
 import { unitsOf } from '../engine/units';
 import type { Data, Feel, Mark } from '../engine/model';
 import { live } from '../engine/model';
 import { getPosition, pausesOf } from '../engine/position';
-import { scheduledCode } from '../engine/schedule';
+import { doneThisWeek, scheduledCode, skippedThisWeek, todayChoices, withChoice, type WeekChoice } from '../engine/schedule';
 import { buildSession, dayTemplate, modsForType, type PlannedExercise, type SessionPlan } from '../engine/session';
 import type { DayView } from '../engine/today';
-import { BLOCKS, LIFTS, PHASE_LABEL, PHASE_TONE, SESSION_TONE, TPL_LABEL, TPL_TONE } from '../plan';
+import { BLOCKS, HEAVY_SESSIONS, LIFTS, PHASE_LABEL, PHASE_TONE, PLAN_START, SESSION_TONE, TPL_LABEL, TPL_TONE } from '../plan';
 import { BACK_RESET, MOBILITY_DAILY } from '../plan/content';
 import { takesLoad } from '../plan/exercises';
 import type { ISODate, LiftKey } from '../plan/types';
-import { applyAction, finishSession, logCardio, logExercise, markExercise, pausePlan, reopenSession, resumePlan, setMobility, setTravel, tickSet, unlogExercise } from '../state/actions';
+import { applyAction, chooseSession, finishSession, logCardio, logExercise, markExercise, pausePlan, reopenSession, resumePlan, setMobility, setTravel, tickSet, undoWeekChange, unlogExercise } from '../state/actions';
 import { go, startRest } from '../state/hooks';
 import { Card, Chip, Fold, NumInput, Seg, Sheet, SectionTitle, Tick, Toggle, Why, cx } from '../ui/kit';
 import { DecisionBadge, InsightCard } from './parts';
+import { STATUS_TONE, weekGoalCheck } from '../recovery/goal';
 import { RecoveryTrainSlot } from '../recovery/ui/slots';
 
 const restText = (s: number) => (s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `0:${String(s).padStart(2, '0')}`);
@@ -30,7 +31,9 @@ export const doseText = (e: { sets: number; reps: number | string | null; work_s
 export function Train({ data, view, route }: ScreenProps) {
   const { session } = view;
   const [pauseOpen, setPauseOpen] = useState(route[1] === 'pause');
+  const [pickOpen, setPickOpen] = useState(false);
   const day = data.days.get(view.date);
+  const canPick = view.pos.status === 'active' && weekday(view.date) <= 5 && !day?.sessionDone;
   // The missed-session offer has its own card below, so it never drops out or stays closed.
   const sessionInsights = view.insights.filter((i) => (i.area === 'session' || i.area === 'safety') && i.id !== view.offer?.id);
   const adjustments = useMemo(() => {
@@ -65,6 +68,11 @@ export function Train({ data, view, route }: ScreenProps) {
         </div>
       </Card>
 
+      {canPick && (
+        <button className="btn block" onClick={() => setPickOpen(true)}>
+          <Shuffle size={16} /> Pick another session
+        </button>
+      )}
       <SessionCard view={view} data={data} />
 
       {adjustments.length > 0 && (
@@ -79,8 +87,9 @@ export function Train({ data, view, route }: ScreenProps) {
       )}
 
       <CardioMobility view={view} data={data} />
-      <RestOfWeek view={view} data={data} />
+      <RestOfWeek view={view} data={data} onPick={canPick ? () => setPickOpen(true) : undefined} />
       <NextBlock view={view} />
+      <SessionPicker view={view} data={data} open={pickOpen} onClose={() => setPickOpen(false)} />
       <PauseSheet open={pauseOpen} onClose={() => { setPauseOpen(false); if (route[1] === 'pause') go('train'); }} data={data} date={view.date} />
     </div>
   );
@@ -370,7 +379,7 @@ function MissedSession({ view }: { view: DayView }) {
   return (
     <Card tone="frost" toned>
       <div style={{ fontWeight: 700 }}>{o.missed} today?</div>
-      <div className="small muted" style={{ marginTop: 2 }}>Missed on {weekdayName(o.missedOn)}. Do it today instead of {view.code}; the rest of the week slides.</div>
+      <div className="small muted" style={{ marginTop: 2 }}>Missed on {weekdayName(o.missedOn)}. Do it today instead of {view.code}; {o.lines.length ? 'the rest of the week slides.' : 'the rest of the week stays as planned.'}</div>
       {o.lines.length > 0 && <ul className="small steps-list">{o.lines.map((l) => <li key={l}>{l}</li>)}</ul>}
       <button className="btn primary block" style={{ marginTop: 10 }} onClick={() => void applyAction({ kind: 'acceptSwap', offer: o }, view.date)}>
         Do {o.missed} today
@@ -379,22 +388,30 @@ function MissedSession({ view }: { view: DayView }) {
   );
 }
 
-function RestOfWeek({ view, data }: { view: DayView; data: Data }) {
+function RestOfWeek({ view, data, onPick }: { view: DayView; data: Data; onPick?: () => void }) {
   const days = useMemo(() => {
     const start = startOfWeek(view.date);
+    const doneCodes = doneThisWeek(view.date, data, true);
     return Array.from({ length: 7 }, (_, i) => {
       const d = addDays(start, i);
       const pos = getPosition(d, data.plan);
-      const code = pos.status === 'active' ? scheduledCode(d, data) : null;
+      const rec = data.days.get(d);
+      const done = !!rec?.sessionDone;
+      const planned = pos.status === 'active' ? scheduledCode(d, data) : null;
+      // A day already trained shows what was done there; a past day not trained says where its session went.
+      const code = done ? (rec?.sessionCode ?? planned) : planned;
       const plan = code ? buildSession({ date: d, code, pos, mods: modsForType('Full'), data }) : null;
-      return { d, code, plan, done: !!data.days.get(d)?.sessionDone };
+      const movedTo = !done && d < view.date && code ? doneCodes.get(code) : undefined;
+      return { d, code, plan, done, movedTo, missed: !done && d < view.date && !!code && !movedTo };
     });
   }, [data, view.date]);
+  // A missed session still on offer for today is not skipped yet.
+  const skipped = useMemo(() => skippedThisWeek(view.date, data, PLAN_START).filter((c) => c !== view.offer?.missed), [data, view.date, view.offer]);
   return (
     <section className="section">
-      <SectionTitle>This week</SectionTitle>
+      <SectionTitle right={onPick && <button className="link-btn" onClick={onPick}>Rearrange</button>}>This week</SectionTitle>
       <Card>
-        {days.map(({ d, code, plan, done }) => (
+        {days.map(({ d, code, plan, done, movedTo, missed }) => (
           <Fold
             key={d}
             title={
@@ -403,6 +420,8 @@ function RestOfWeek({ view, data }: { view: DayView; data: Data }) {
                 {code ? <Chip tone={SESSION_TONE[code]} solid={d === view.date}>{code}</Chip> : <Chip plain>Rest · walk</Chip>}
                 {plan && <span className="tiny muted">{plan.kind}</span>}
                 {done && <Check size={14} color="var(--moss)" aria-label="done" />}
+                {movedTo && <span className="tiny muted">done {weekdayShort(movedTo)}</span>}
+                {missed && <span className="tiny" style={{ color: 'var(--ember)' }}>missed</span>}
               </div>
             }
           >
@@ -417,8 +436,65 @@ function RestOfWeek({ view, data }: { view: DayView; data: Data }) {
             )}
           </Fold>
         ))}
+        {skipped.length > 0 && <div className="small muted" style={{ padding: '10px 0 4px' }}>Skipped this week: {skipped.join(', ')}</div>}
       </Card>
     </section>
+  );
+}
+
+/** Today's session by hand: what is still owed this week, each with the week that would follow and its effect on the goal. */
+function SessionPicker({ view, data, open, onClose }: { view: DayView; data: Data; open: boolean; onClose: () => void }) {
+  return (
+    <Sheet open={open} title="Pick today's session" onClose={onClose}>
+      {open && <PickerBody view={view} data={data} onClose={onClose} />}
+    </Sheet>
+  );
+}
+
+function PickerBody({ view, data, onClose }: { view: DayView; data: Data; onClose: () => void }) {
+  const { choices, done } = useMemo(() => todayChoices(view.date, data, PLAN_START), [view.date, data]);
+  // With the recovery module on, each choice is checked against the weekly set floors behind the goal.
+  const goal = useMemo(() => (data.recovery ? new Map(choices.map((c) => [c.code, weekGoalCheck(view.date, withChoice(data, view.date, c))])) : null), [choices, data, view.date]);
+  const weekStart = startOfWeek(view.date);
+  const changed = data.plan.some((e) => e.kind === 'swap' && !e.deleted && e.weekStart === weekStart);
+  const pick = async (c: WeekChoice) => {
+    if (c.code !== view.code) await chooseSession(view.date, c);
+    onClose();
+  };
+  return (
+    <div className="stack">
+      <div className="small muted">Still to do this week. Pick one and the rest of the week falls in behind it: never two leg days in a row, Sunday stays a rest day.</div>
+      {choices.map((c) => {
+        const g = goal?.get(c.code);
+        const heavy = c.skipped.filter((x) => HEAVY_SESSIONS.includes(x));
+        const tag = c.code === view.code ? 'Planned' : c.code && c.code === view.offer?.missed ? 'Suggested' : '';
+        return (
+          <button key={c.code ?? 'rest'} className={cx('choice', c.code === view.code && 'now')} aria-label={c.code ? `Do ${c.code} today` : 'Rest today'} onClick={() => void pick(c)}>
+            <div className="row between">
+              <div className="row" style={{ gap: 8 }}>
+                {c.code ? <Chip tone={SESSION_TONE[c.code]} solid={c.code === view.code}>{c.code}</Chip> : <Chip plain>Rest today</Chip>}
+                <span className="small muted">{c.code ? dayTemplate(c.code, view.pos.tpl).day.kind : 'The week slides'}</span>
+              </div>
+              {tag && <span className="tiny">{tag}</span>}
+            </div>
+            {c.rest.length > 0 && <div className="small" style={{ marginTop: 6 }}>Then {c.rest.map((r) => `${weekdayShort(r.date)} ${r.code ?? 'rest'}`).join(' · ')}</div>}
+            {c.skipped.length > 0 && <div className="small muted" style={{ marginTop: 2 }}>Skips {c.skipped.join(', ')}</div>}
+            {c.warning && <div className="small" style={{ marginTop: 2, color: 'var(--ember)' }}>{c.warning}</div>}
+            {g && g.status !== 'not-judged' ? (
+              <div className="small" style={{ marginTop: 2, color: `var(--${STATUS_TONE[g.status]})` }}>{g.status === 'maintained' ? 'On track.' : g.status === 'slowed' ? 'Goal slowed.' : 'Goal at risk.'} {g.reason}</div>
+            ) : heavy.length > 0 ? (
+              <div className="small" style={{ marginTop: 2, color: 'var(--gold)' }}>Skips a heavy session: {heavy.join(', ')} waits until next week.</div>
+            ) : null}
+          </button>
+        );
+      })}
+      {done.size > 0 && <div className="small muted">Done this week: {[...done].map(([c, d]) => `${c} (${weekdayShort(d)})`).join(', ')}</div>}
+      {changed && (
+        <button className="link-btn row" style={{ gap: 4 }} onClick={() => void undoWeekChange(weekStart).then(onClose)}>
+          <Undo2 size={14} /> Undo the last change to this week
+        </button>
+      )}
+    </div>
   );
 }
 

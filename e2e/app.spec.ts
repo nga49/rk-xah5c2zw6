@@ -205,6 +205,44 @@ test('a missed heavy session stays on offer in Train, even after closing the car
   await expect(page.getByRole('button', { name: 'Do BLADES today' })).toHaveCount(0);
 });
 
+test('a slid week: the real missed session is suggested, and today\'s session can be picked by hand', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-26T20:00:00'));
+  await setup(page);
+  await at(page, '2026-10-27T07:30:00');
+  await checkIn(page, { h: '7', m: '50', score: '84', energy: '4', stress: '2' });
+  const nav = page.getByRole('navigation', { name: 'Main' });
+  await nav.getByRole('link', { name: 'Train' }).click();
+  await page.getByRole('button', { name: 'Do BLADES today' }).click();
+  await expect(page.locator('.band .n')).toHaveText('BLADES');
+
+  // Thursday: BLADES was done on Tuesday (filled in afterwards), LEVIATHAN was missed on Wednesday.
+  await at(page, '2026-10-29T07:30:00');
+  await page.goto('./#/today/2026-10-27');
+  await page.getByRole('checkbox', { name: /BLADES/ }).click();
+  await page.getByRole('button', { name: 'Back to today' }).click();
+  await checkIn(page, { h: '7', m: '50', score: '84', energy: '4', stress: '2' });
+  await nav.getByRole('link', { name: 'Train' }).click();
+  await expect(page.getByText('LEVIATHAN today?')).toBeVisible();
+  await expect(page.getByText('BLADES today?')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Pick another session' }).click();
+  const sheet = page.getByRole('dialog', { name: "Pick today's session" });
+  await expect(sheet.getByText('Done this week: BLADES (Tue)')).toBeVisible();
+  await expect(sheet.getByRole('button', { name: 'Do BLADES today' })).toHaveCount(0);
+  await expect(sheet.getByRole('button', { name: 'Do LEVIATHAN today' })).toContainText('Then Fri SPARTAN · Sat DRAUPNIR');
+  await sheet.getByRole('button', { name: 'Do LEVIATHAN today' }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(page.locator('.band .n')).toHaveText('LEVIATHAN');
+  await expect(page.getByText('LEVIATHAN today?')).toHaveCount(0);
+  const week = page.locator('section', { has: page.getByRole('heading', { name: 'This week' }) });
+  await expect(week.getByText('missed', { exact: true })).toHaveCount(1);
+  await expect(week.getByText('done Tue')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Pick another session' }).click();
+  await sheet.getByRole('button', { name: 'Undo the last change to this week' }).click();
+  await expect(page.locator('.band .n')).toHaveText('SPARTAN');
+});
+
 test('opens offline after the first visit (service worker)', async ({ page, context }) => {
   await page.clock.setFixedTime(new Date('2026-10-21T08:00:00'));
   await setup(page);

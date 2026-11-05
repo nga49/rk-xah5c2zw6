@@ -7,7 +7,7 @@ import { weeklyAverage } from '../engine/formulas';
 import type { Data } from '../engine/model';
 import { live } from '../engine/model';
 import { getPosition, pausesOf, planDateOf, realDateOf } from '../engine/position';
-import { scheduledCode } from '../engine/schedule';
+import { doneThisWeek, scheduledCode } from '../engine/schedule';
 import { buildSessionCore } from '../engine/session';
 import { targetWeight } from '../engine/stats';
 import { computeDay } from '../engine/today';
@@ -151,6 +151,12 @@ function volumePart(vol: MuscleWeek[], sig: GoalSignals): Part {
   return { status: 'slowed', reason: `${worst.muscle} ${worst.projected} of ${worst.target} sets${dayShort ? `, ${worst.days} day${worst.days === 1 ? '' : 's'}` : ''} this week.` };
 }
 
+/** This week's volume verdict as the schedule stands: does every goal muscle still get its sets and days? */
+export function weekGoalCheck(date: ISODate, data: Data): Part {
+  const sig = goalSignals(date, data);
+  return volumePart(weekVolume(date, data, sig), sig);
+}
+
 function weightPart(date: ISODate, data: Data, goal: GoalDef): Part & { gap?: number } {
   const avg = weeklyAverage(data.body, date);
   if (avg == null) return { status: 'not-judged', reason: 'Need 3 weigh-ins this week to judge weight.' };
@@ -205,9 +211,13 @@ function consistencyPart(date: ISODate, data: Data): Part {
   for (let i = 1; i <= 14; i++) {
     const d = addDays(date, -i);
     const pos = getPosition(d, data.plan);
-    if (pos.status !== 'active' || !scheduledCode(d, data)) continue;
+    const code = scheduledCode(d, data);
+    if (pos.status !== 'active' || !code) continue;
+    const sessionDone = !!data.days.get(d)?.sessionDone;
+    // A session done on another day of its week counts there, not as a miss here.
+    if (!sessionDone && doneThisWeek(addDays(startOfWeek(d), 6), data, true).has(code)) continue;
     planned += 1;
-    if (data.days.get(d)?.sessionDone) done += 1;
+    if (sessionDone) done += 1;
   }
   if (planned < 3) return { status: 'not-judged', reason: 'Too early to judge consistency.' };
   const r = done / planned;

@@ -104,7 +104,9 @@ export function historyData(seed = 2029, until: ISODate = '2028-06-30'): Data {
       data.body.push({ id: uid('body'), date: d, weightKg: Math.round(bw * 10) / 10, updatedAt: Date.parse(d) });
     }
     const view = computeDay(d, data, evening(d));
-    if (view.offer && r() < 0.5) {
+    // Drawn every day, so a change in when offers appear does not reshuffle the rest of the history.
+    const takeOffer = r() < 0.5;
+    if (view.offer && takeOffer) {
       data.plan.push({ id: uid('swap'), kind: 'swap', date: d, weekStart: view.offer.weekStart, map: view.offer.map, reason: `Missed ${view.offer.missed}`, updatedAt: 1 });
     }
     const dec = view.decision;

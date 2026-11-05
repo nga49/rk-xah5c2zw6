@@ -1,10 +1,11 @@
 import { db } from '../db/db';
-import { newId, now, patchDay, put, remove, setTask } from '../db/store';
-import { addDays } from '../engine/dates';
+import { loadData, newId, now, patchDay, put, remove, setTask } from '../db/store';
+import { addDays, startOfWeek } from '../engine/dates';
 import { epley } from '../engine/formulas';
 import type { InsightAction } from '../engine/insights';
 import type { CardioType, Checkin, DayRecord, Feel, Mark, ReadinessSnapshot, SessionType } from '../engine/model';
 import type { PlannedExercise, SessionPlan } from '../engine/session';
+import { scheduledCode, type WeekChoice } from '../engine/schedule';
 import type { DayView } from '../engine/today';
 import type { ISODate, LiftKey, SessionCode } from '../plan/types';
 import { DAILY_CODE } from '../plan';
@@ -120,6 +121,31 @@ export async function resumePlan(id: string, start: ISODate, today: ISODate): Pr
   toast('Plan resumed');
 }
 
+// ---------------------------------------------------------------- the week
+
+/** What the days already gone this week were planned as, so a new swap keeps them (only the latest swap counts). */
+async function daysGone(weekStart: ISODate, date: ISODate): Promise<Record<ISODate, SessionCode | null>> {
+  const data = await loadData();
+  const out: Record<ISODate, SessionCode | null> = {};
+  for (let d = weekStart; d < date; d = addDays(d, 1)) out[d] = scheduledCode(d, data);
+  return out;
+}
+
+/** Today's session picked by hand: the whole week is saved as one swap. */
+export async function chooseSession(date: ISODate, choice: WeekChoice): Promise<void> {
+  await put('plan', { id: newId(), kind: 'swap', date, weekStart: startOfWeek(date), map: choice.map, reason: choice.code ? `Chose ${choice.code}` : 'Rest today' });
+  toast(choice.code ? `${choice.code} today. The week is rearranged.` : 'Rest today. The week is rearranged.');
+}
+
+/** Back to the week as it was before its last change. */
+export async function undoWeekChange(weekStart: ISODate): Promise<void> {
+  const swaps = (await db.plan.toArray()).filter((e) => e.kind === 'swap' && !e.deleted && e.weekStart === weekStart).sort((a, b) => a.updatedAt - b.updatedAt);
+  const last = swaps.at(-1);
+  if (!last) return;
+  await remove('plan', last.id);
+  toast('Last change undone');
+}
+
 // ---------------------------------------------------------------- insight cards
 
 export async function dismiss(id: string, date: ISODate): Promise<void> {
@@ -137,7 +163,7 @@ export async function applyAction(a: InsightAction, date: ISODate): Promise<void
       toast('Reload until Sunday');
       break;
     case 'acceptSwap':
-      await put('plan', { id: newId(), kind: 'swap', date, weekStart: a.offer.weekStart, map: a.offer.map, reason: `Missed ${a.offer.missed}` });
+      await put('plan', { id: newId(), kind: 'swap', date, weekStart: a.offer.weekStart, map: { ...(await daysGone(a.offer.weekStart, date)), ...a.offer.map }, reason: `Missed ${a.offer.missed}` });
       toast(`${a.offer.missed} today`);
       break;
     case 'acceptVariant':

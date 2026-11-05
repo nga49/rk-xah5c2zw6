@@ -1,5 +1,14 @@
 # Changelog
 
+## Pick today's session; a slid week stays right
+
+- A session done on another day of the week counts as done: it is never offered again as missed. The offer now suggests the session really missed.
+- Train has "Pick another session" (and "Rearrange" on This week). It lists every session still to do this week, plus rest. Each choice shows the days that follow, what no longer fits, any warning (legs two days running, a seventh lifting day) and, with the recovery module on, whether every goal muscle still gets its weekly sets. One tap saves it; "Undo the last change to this week" goes back.
+- The rest of the week is arranged by the same rules as the missed-session offer: heavy sessions first, never two leg days in a row, Sunday rest. A day left free takes back a session dropped earlier in the week.
+- Rearranging keeps the days already gone, so a done session stays where it was done. This week shows each past day as done, "done Tue" (moved) or missed, and what was skipped.
+- Goal Guardian counts a moved session where it was done, not as a miss.
+- Test fixture: the simulated history now draws its accept-the-offer number every day. Golden fingerprints regenerated after checking, on one frozen history, that only the missed-session offer changed (15 of 621 days, each a session already done or a free day refilled).
+
 ## Fixes: pop-up sheets, missed sessions
 
 - Pop-up sheets (session type, check-ins, finish session and others) open above the whole screen again. The screens' entrance animation had trapped them under the header, so the top choices could not be tapped.
